@@ -1,0 +1,2779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Rudi Foodi</title>
+  <style>
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #98dfff;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      touch-action: none;
+    }
+
+    canvas { display: block; }
+
+    #hud {
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      z-index: 10;
+      color: white;
+      font-weight: 900;
+      text-shadow: 0 2px 8px rgba(0,0,0,.45);
+      font-size: 18px;
+      line-height: 1.35;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    #hud button {
+      display: inline-block;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,.18);
+    }
+
+    #hint {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      color: white;
+      background: rgba(0,0,0,.24);
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 14px;
+      text-align: center;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    #cameraZone {
+      position: fixed;
+      inset: 0;
+      z-index: 3;
+      touch-action: none;
+    }
+
+    #joystickBase {
+      position: fixed;
+      left: 24px;
+      bottom: 46px;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.22);
+      border: 2px solid rgba(255,255,255,.4);
+      z-index: 9;
+      touch-action: none;
+    }
+
+    #joystickKnob {
+      position: absolute;
+      left: 36px;
+      top: 36px;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.75);
+      box-shadow: 0 8px 18px rgba(0,0,0,.22);
+    }
+
+    #zoomButton {
+      position: fixed;
+      right: 28px;
+      bottom: 64px;
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      border: 0;
+      z-index: 9;
+      background: rgba(255,255,255,.84);
+      color: #4c2c17;
+      font-size: 48px;
+      font-weight: 900;
+      box-shadow: 0 10px 24px rgba(0,0,0,.22);
+      touch-action: none;
+    }
+
+    #zoomToggleButton {
+      position: fixed;
+      right: 28px;
+      bottom: 172px;
+      width: 96px;
+      height: 58px;
+      border-radius: 999px;
+      border: 0;
+      z-index: 9;
+      background: rgba(255,255,255,.84);
+      color: #4c2c17;
+      font-size: 13px;
+      font-weight: 900;
+      box-shadow: 0 10px 24px rgba(0,0,0,.22);
+      touch-action: none;
+    }
+
+    #titleScreen {
+      pointer-events: auto;
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      background: radial-gradient(circle at center, #b7ecff 0%, #79d86b 72%);
+      color: white;
+      text-align: center;
+      user-select: none;
+    }
+
+    #gameTitle {
+      margin: 0;
+      font-family: "Gill Sans Ultra Bold", "Gill Sans", "Arial Black", system-ui, sans-serif;
+      font-size: clamp(48px, 10vw, 110px);
+      letter-spacing: 2px;
+      text-shadow: 0 8px 0 rgba(0,0,0,.18), 0 18px 40px rgba(0,0,0,.25);
+    }
+
+    #playButton, #goBackButton {
+      position: relative;
+      z-index: 95;
+      pointer-events: auto;
+      border: 0;
+      border-radius: 999px;
+      padding: 16px 46px;
+      font-family: "Gill Sans Ultra Bold", "Gill Sans", "Arial Black", system-ui, sans-serif;
+      font-size: 28px;
+      color: #4c2c17;
+      background: white;
+      box-shadow: 0 12px 26px rgba(0,0,0,.22);
+      touch-action: manipulation;
+    }
+
+    #titleRudi {
+      position: relative;
+      z-index: 90;
+      width: min(360px, 70vw);
+      height: min(280px, 42vh);
+      pointer-events: none;
+      filter: drop-shadow(0 18px 28px rgba(0,0,0,.25));
+    }
+
+    #titleRudi canvas {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+    }
+
+    #controlsCard {
+      position: relative;
+      z-index: 90;
+      background: rgba(0,0,0,.22);
+      border: 1px solid rgba(255,255,255,.28);
+      border-radius: 22px;
+      padding: 14px 18px;
+      font-weight: 800;
+      line-height: 1.5;
+      max-width: min(560px, 86vw);
+      text-shadow: 0 2px 8px rgba(0,0,0,.25);
+    }
+
+    #creditsButton, #leaderboardButton {
+      pointer-events: auto;
+      position: fixed;
+      top: 18px;
+      z-index: 70;
+      border: 0;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-weight: 900;
+      background: rgba(255,255,255,.88);
+      color: #4c2c17;
+      box-shadow: 0 8px 20px rgba(0,0,0,.22);
+      touch-action: manipulation;
+    }
+
+    #creditsButton { right: 18px; }
+    #leaderboardButton { left: 18px; }
+
+    #leaderboardPanel,
+    #nameEntryPanel,
+    #creditsPanel {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(0,0,0,.45);
+    }
+
+    #leaderboardCard,
+    #nameEntryCard,
+    #creditsCard {
+      width: min(680px, 92vw);
+      max-height: 82vh;
+      overflow: auto;
+      border-radius: 28px;
+      padding: 22px;
+      background: rgba(255,255,255,.94);
+      color: #3b2414;
+      box-shadow: 0 18px 50px rgba(0,0,0,.35);
+      text-align: left;
+      font-weight: 750;
+      line-height: 1.45;
+    }
+
+    #leaderboardCard h2,
+    #nameEntryCard h2,
+    #creditsCard h2 {
+      margin: 0 0 10px;
+      font-family: "Gill Sans Ultra Bold", "Arial Black", system-ui, sans-serif;
+      font-size: clamp(28px, 6vw, 48px);
+      text-align: center;
+    }
+
+    #closeLeaderboardButton,
+    #saveScoreButton,
+    #closeNameEntryButton,
+    #closeLeaderboardButton,
+    #saveScoreButton,
+    #closeNameEntryButton,
+    #closeCreditsButton {
+      display: block;
+      margin: 18px auto 0;
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 26px;
+      font-weight: 900;
+      background: #79d86b;
+      color: white;
+      box-shadow: 0 8px 20px rgba(0,0,0,.22);
+    }
+
+    #leaderboardList {
+      padding-left: 26px;
+      font-size: 18px;
+      line-height: 1.7;
+    }
+
+    #usernameInput {
+      display: block;
+      width: min(360px, 82vw);
+      margin: 16px auto;
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 2px solid rgba(0,0,0,.2);
+      font-size: 20px;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    #nameEntryError {
+      color: #b00020;
+      text-align: center;
+      font-weight: 900;
+      min-height: 24px;
+    }
+
+    #explosionOverlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: white;
+      opacity: 0;
+      z-index: 99;
+    }
+
+    #endText {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 22px;
+      background: rgba(0,0,0,.30);
+      color: white;
+      font-family: "Gill Sans Ultra Bold", "Arial Black", sans-serif;
+      font-size: clamp(34px, 7vw, 84px);
+      text-align: center;
+      z-index: 100;
+      text-shadow: 0 10px 30px rgba(0,0,0,.5);
+      pointer-events: auto;
+    }
+
+    #goBackButton {
+      font-size: clamp(20px, 3vw, 34px);
+      padding: 14px 34px;
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div id="titleScreen">
+    <button id="leaderboardButton">Leaderboard</button>
+    <button id="creditsButton">Credits</button>
+    <h1 id="gameTitle">Rudi Foodi</h1>
+    <div id="modeButtons" style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;z-index:95;position:relative;">
+      <button id="easyModeButton" style="border:0;border-radius:999px;padding:10px 18px;font-weight:900;background:#ffffff;color:#4c2c17;box-shadow:0 8px 18px rgba(0,0,0,.2);">Easy</button>
+      <button id="mediumModeButton" style="border:0;border-radius:999px;padding:10px 18px;font-weight:900;background:rgba(255,255,255,.75);color:#4c2c17;box-shadow:0 8px 18px rgba(0,0,0,.2);">Medium</button>
+      <button id="hardModeButton" style="border:0;border-radius:999px;padding:10px 18px;font-weight:900;background:rgba(255,255,255,.75);color:#4c2c17;box-shadow:0 8px 18px rgba(0,0,0,.2);">Hard</button>
+    </div>
+    <button id="playButton">PLAY</button>
+    <div id="titleRudi"></div>
+    <div id="controlsCard">
+      Controls:<br>
+      Drag anywhere = move camera<br>
+      Left joystick = move Rudi<br>
+      Tap ZOOMIES = toggle speed<br>
+      Find secrets by exploring 👀
+    </div>
+  </div>
+
+  <div id="creditsPanel">
+    <div id="creditsCard">
+      <h2>Rudi Foodi Credits</h2>
+      <p><strong>Created by:</strong> Beckham Miller</p>
+      <p><strong>Game design:</strong> Beckham Miller</p>
+      <p><strong>Rudi lore:</strong> Beckham Miller</p>
+      <p><strong>Level ideas:</strong> Beckham Miller</p>
+      <p><strong>Power-up chaos director:</strong> Beckham Miller</p>
+      <p><strong>Official dog inspiration:</strong> Rudi</p>
+      <p><strong>Important lore fact:</strong> Rudi is actually a real dog in real life. The game version is based on the real Rudi, including the black spot on his side, the goofy energy, and the legendary zoomies.</p>
+      <p><strong>Story:</strong> The history of Rudi Foodi began when Beckham Miller decided to create a silly game featuring his real life dog – Rudi. Initially, it was supposed to be an absolutely simple and basic prototype consisting of a single room, some drifting treats, and a ridiculous low poly dog. However, after the release of the prototype, every subsequent addition of features got increasingly weirder and more amusing. At first came &quot;Zoomies&quot; followed by cloning and power-ups, various size modes, rotating levels, dancing, meteors, and flying debris. It seems that every bug Beckham Miller had found in his updates was so ridiculous that he would not remove them but instead integrate it into the story of Rudi. Currently, there are twenty levels in Rudi Foodi ranging from pirate ships, through the lava islands and neon cities all the way to floating cloud worlds, candy forests, factories, caverns, and dog parks of enormous size. Moreover, every level in Rudi Foodi is accompanied by unique music creating distinctive moods for each world. As for Rudi himself, he has evolved from a pixelated character to a smoother and slightly larger version of the actual dog. Nowadays, Rudi Foodi can be described as an inside joke driven by the power of treats, zoomies, friendship, and madness.</p>
+
+      <button id="closeCreditsButton">Back</button>
+    </div>
+  </div>
+
+  <div id="leaderboardPanel">
+    <div id="leaderboardCard">
+      <h2>Rudi Foodi Leaderboard</h2>
+      <ol id="leaderboardList"></ol>
+      <button id="closeLeaderboardButton">Back</button>
+    </div>
+  </div>
+
+  <div id="nameEntryPanel">
+    <div id="nameEntryCard">
+      <h2>You completed Rudi Foodi!</h2>
+      <p id="finalTimeText" style="text-align:center;font-weight:900;"></p>
+      <input id="usernameInput" maxlength="18" placeholder="Enter a unique username" />
+      <div id="nameEntryError"></div>
+      <button id="saveScoreButton">Save Score</button>
+      <button id="closeNameEntryButton">Skip</button>
+    </div>
+  </div>
+
+  <div id="hud">
+    Level: <span id="levelDisplay">1</span><br>
+    Treats: <span id="score">0</span><br>
+    Zoomies: <span id="boost">100</span>%<br>
+    <button id="zoomStacksButton" style="pointer-events:auto;border:0;border-radius:999px;padding:5px 9px;font-weight:900;background:rgba(255,255,255,.82);color:#4c2c17;margin-top:4px;">Zoom stacks: <span id="zoomStacksDisplay">0</span></button>
+    <button id="cloneCountButton" style="pointer-events:auto;border:0;border-radius:999px;padding:5px 9px;font-weight:900;background:rgba(255,255,255,.82);color:#4c2c17;margin-top:4px;">Clones: <span id="cloneCountDisplay">0</span></button>
+    <button id="spinToggleButton" style="pointer-events:auto;border:0;border-radius:999px;padding:5px 9px;font-weight:900;background:rgba(255,255,255,.82);color:#4c2c17;margin-top:4px;">Stop Spin</button><br>
+    Power-ups left: <span id="powerCount">0</span>
+  </div>
+  <div id="hint">Tap once for sound • Drag anywhere to move camera • Left joystick moves • ZOOMIES toggles</div>
+  <div id="cameraZone"></div>
+  <div id="joystickBase"><div id="joystickKnob"></div></div>
+  <button id="zoomToggleButton">ZOOMIES</button>
+  <button id="zoomButton">↑</button>
+  <div id="explosionOverlay"></div>
+  <div id="endText">
+    <div id="endingMessage">🐶 Good job, you won!</div>
+    <button id="goBackButton">Go Back</button>
+  </div>
+
+  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script>
+    "use strict";
+
+    if (!window.THREE) throw new Error("Three.js failed to load.");
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x98dfff);
+    scene.fog = new THREE.Fog(0x98dfff, 180, 850);
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
+    camera.position.set(0, 14, 19);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    document.body.appendChild(renderer.domElement);
+
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x5d8f45, 1.6);
+    scene.add(hemiLight);
+
+    const sun = new THREE.DirectionalLight(0xffffff, 2.2);
+    sun.position.set(90, 160, 80);
+    sun.castShadow = true;
+    sun.shadow.mapSize.width = 1024;
+    sun.shadow.mapSize.height = 1024;
+    sun.shadow.camera.near = 1;
+    sun.shadow.camera.far = 500;
+    sun.shadow.camera.left = -260;
+    sun.shadow.camera.right = 260;
+    sun.shadow.camera.top = 260;
+    sun.shadow.camera.bottom = -260;
+    scene.add(sun);
+
+    const hud = document.getElementById("hud");
+    const hint = document.getElementById("hint");
+    const levelDisplay = document.getElementById("levelDisplay");
+    const scoreEl = document.getElementById("score");
+    const boostEl = document.getElementById("boost");
+    const powerCountEl = document.getElementById("powerCount");
+    const zoomStacksButton = document.getElementById("zoomStacksButton");
+    const zoomStacksDisplay = document.getElementById("zoomStacksDisplay");
+    const cloneCountButton = document.getElementById("cloneCountButton");
+    const cloneCountDisplay = document.getElementById("cloneCountDisplay");
+    const spinToggleButton = document.getElementById("spinToggleButton");
+    const titleScreen = document.getElementById("titleScreen");
+    const endText = document.getElementById("endText");
+    const endingMessage = document.getElementById("endingMessage");
+    const explosionOverlay = document.getElementById("explosionOverlay");
+    const zoomButton = document.getElementById("zoomButton");
+    const zoomToggleButton = document.getElementById("zoomToggleButton");
+    const joystickBase = document.getElementById("joystickBase");
+    const joystickKnob = document.getElementById("joystickKnob");
+    const cameraZone = document.getElementById("cameraZone");
+    const creditsButton = document.getElementById("creditsButton");
+    const creditsPanel = document.getElementById("creditsPanel");
+    const closeCreditsButton = document.getElementById("closeCreditsButton");
+    const leaderboardButton = document.getElementById("leaderboardButton");
+    const leaderboardPanel = document.getElementById("leaderboardPanel");
+    const leaderboardList = document.getElementById("leaderboardList");
+    const closeLeaderboardButton = document.getElementById("closeLeaderboardButton");
+    const nameEntryPanel = document.getElementById("nameEntryPanel");
+    const finalTimeText = document.getElementById("finalTimeText");
+    const usernameInput = document.getElementById("usernameInput");
+    const nameEntryError = document.getElementById("nameEntryError");
+    const saveScoreButton = document.getElementById("saveScoreButton");
+    const closeNameEntryButton = document.getElementById("closeNameEntryButton");
+    const easyModeButton = document.getElementById("easyModeButton");
+    const mediumModeButton = document.getElementById("mediumModeButton");
+    const hardModeButton = document.getElementById("hardModeButton");
+
+    let gameStarted = false;
+    let cameraYaw = 0;
+    let cameraPitch = 0.35;
+    let currentLevel = 1;
+    const MAX_LEVELS = 20;
+    let gameMode = "easy";
+    let hunterDog = null;
+    let hunterActive = false;
+    let hunterSpeed = 0;
+    let finalBossStar = null;
+    let finalBossStarActive = false;
+    let finalBossEnding = false;
+    let finalBossTimer = 0;
+    let score = 0;
+    let boost = 100;
+    let zoomLocked = false;
+    let jumpVelocity = 0;
+    let jumpHeight = 0;
+    let isJumping = false;
+    let sizeMultiplier = 1;
+    let speedStacks = 0;
+    let speedMultiplier = 1;
+    let cloneFlyAwayTriggered = false;
+    let rudySpinMode = false;
+    let rudyDanceMode = false;
+    let flyAwayEnding = false;
+    let flyAwayTimer = 0;
+    let meteorEnding = false;
+    let meteorTimer = 0;
+    let meteorExploded = false;
+    let explosionFlash = 0;
+    let zoomResetArmed = false;
+    let cloneClearArmed = false;
+    let powerAnim = null;
+    let currentPowerForm = "normal";
+    let spinDisabled = false;
+    let gameStartTime = 0;
+    let finalCompletionTime = null;
+    const LEADERBOARD_KEY = "rudiFoodiLeaderboardV1";
+
+    // Global leaderboard setup:
+    // Make a free Firebase project, enable Firestore, then paste your web config here.
+    const firebaseConfig = {
+      apiKey: "AIzaSyBhNtfG55I4KVtL7TWdoIPsSyzByStRz0M",
+      authDomain: "rudi-foodi-leaderboard.firebaseapp.com",
+      projectId: "rudi-foodi-leaderboard",
+      storageBucket: "rudi-foodi-leaderboard.firebasestorage.app",
+      messagingSenderId: "1050369825152",
+      appId: "1:1050369825152:web:f526d88cd6047ff71f0965",
+      measurementId: "G-83RMC4W02M"
+    };
+
+    const GLOBAL_LEADERBOARD_ENABLED = !firebaseConfig.apiKey.includes("PASTE_");
+    let globalDb = null;
+
+    if (GLOBAL_LEADERBOARD_ENABLED && window.firebase) {
+      firebase.initializeApp(firebaseConfig);
+      globalDb = firebase.firestore();
+    }
+
+    const keys = {};
+    const rudiPos = new THREE.Vector3(0, 0, 0);
+    const velocity = new THREE.Vector3();
+    const treats = [];
+    const powerUps = [];
+    const clones = [];
+    const debrisObjects = [];
+    const roomObjects = [];
+
+    function setMode(mode) {
+      gameMode = mode;
+      easyModeButton.style.background = mode === "easy" ? "#ffffff" : "rgba(255,255,255,.75)";
+      mediumModeButton.style.background = mode === "medium" ? "#ffffff" : "rgba(255,255,255,.75)";
+      hardModeButton.style.background = mode === "hard" ? "#ffffff" : "rgba(255,255,255,.75)";
+      if (mode === "easy") hint.textContent = "Easy Mode: normal Rudi chaos.";
+      if (mode === "medium") hint.textContent = "Medium Mode: a slow hunter chases Rudi.";
+      if (mode === "hard") hint.textContent = "Hard Mode: zoomies are required to escape.";
+    }
+
+    function resetHunter() {
+      if (hunterDog) scene.remove(hunterDog);
+      hunterDog = null;
+      hunterActive = false;
+    }
+
+    function makeHunterDog() {
+      const hunter = new THREE.Group();
+
+      const skinMat = new THREE.MeshStandardMaterial({
+        color: 0xffd7b5,
+        roughness: 0.72,
+        metalness: 0
+      });
+
+      const shirtMat = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        roughness: 0.82,
+        metalness: 0.02
+      });
+
+      const jeansMat = new THREE.MeshStandardMaterial({
+        color: 0x315a9a,
+        roughness: 0.88,
+        metalness: 0.02
+      });
+
+      const shoeMat = new THREE.MeshStandardMaterial({
+        color: 0x111111,
+        roughness: 1
+      });
+
+      const hairMat = new THREE.MeshStandardMaterial({
+        color: 0x8b5a2b,
+        roughness: 1
+      });
+
+      const body = new THREE.Mesh(new THREE.BoxGeometry(1.35, 2.1, 0.72, 6, 6, 6), shirtMat);
+      body.position.y = 3.05;
+      body.castShadow = true;
+      body.receiveShadow = true;
+      hunter.add(body);
+
+      const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 0.25, 16), skinMat);
+      neck.position.y = 4.18;
+      hunter.add(neck);
+
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.62, 28, 18), skinMat);
+      head.position.y = 4.82;
+      head.scale.set(0.86, 1.05, 0.82);
+      head.castShadow = true;
+      hunter.add(head);
+
+      const hairBase = new THREE.Mesh(new THREE.SphereGeometry(0.66, 24, 14), hairMat);
+      hairBase.position.y = 5.15;
+      hairBase.scale.set(1.08, 0.58, 1.02);
+      hunter.add(hairBase);
+
+      for (let i = 0; i < 18; i++) {
+        const spike = new THREE.Mesh(new THREE.ConeGeometry(0.065, 0.38, 8), hairMat);
+        const angle = (i / 18) * Math.PI * 2;
+        const radius = 0.22 + Math.random() * 0.18;
+
+        spike.position.set(
+          Math.cos(angle) * radius,
+          5.34 + Math.random() * 0.16,
+          Math.sin(angle) * radius
+        );
+
+        spike.rotation.x = (Math.random() - 0.5) * 0.7;
+        spike.rotation.z = (Math.random() - 0.5) * 0.7;
+        hunter.add(spike);
+      }
+
+      const eyeMat = new THREE.MeshBasicMaterial({ color: gameMode === "hard" ? 0xff0000 : 0x111111 });
+      for (const x of [-0.18, 0.18]) {
+        const eye = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 8), eyeMat);
+        eye.position.set(x, 4.9, 0.52);
+        hunter.add(eye);
+      }
+
+      const smile = new THREE.Mesh(
+        new THREE.TorusGeometry(0.13, 0.014, 8, 24, Math.PI),
+        new THREE.MeshBasicMaterial({ color: 0x5c2a22 })
+      );
+      smile.rotation.z = Math.PI;
+      smile.position.set(0, 4.52, 0.55);
+      hunter.add(smile);
+
+      for (const x of [-0.82, 0.82]) {
+        const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.17, 1.9, 14), shirtMat);
+        arm.position.set(x, 3.05, 0);
+        arm.rotation.z = x < 0 ? 0.18 : -0.18;
+        arm.userData.kind = "arm";
+        arm.userData.baseRotationZ = arm.rotation.z;
+        arm.castShadow = true;
+        hunter.add(arm);
+
+        const hand = new THREE.Mesh(new THREE.SphereGeometry(0.14, 12, 8), skinMat);
+        hand.position.set(x * 1.18, 2.08, 0);
+        hunter.add(hand);
+      }
+
+      const waist = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.24, 0.74, 6, 3, 6), jeansMat);
+      waist.position.y = 1.86;
+      hunter.add(waist);
+
+      for (const x of [-0.3, 0.3]) {
+        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.28, 1.7, 14), jeansMat);
+        leg.position.set(x, 0.92, 0);
+        leg.userData.kind = "leg";
+        leg.userData.baseRotationX = 0;
+        leg.castShadow = true;
+        hunter.add(leg);
+
+        const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.2, 0.72, 5, 3, 5), shoeMat);
+        shoe.position.set(x, 0.08, 0.12);
+        hunter.add(shoe);
+      }
+
+      hunter.scale.set(0.88, 0.88, 0.88);
+      return hunter;
+    }
+
+    function spawnHunterDog() {
+      resetHunter();
+      if (gameMode === "easy") return;
+      hunterDog = makeHunterDog();
+      hunterDog.position.set(rudi.position.x + 65, 1.4, rudi.position.z + 65);
+      scene.add(hunterDog);
+      hunterActive = true;
+      updateHunterSpeed();
+    }
+
+    function updateHunterSpeed() {
+      if (gameMode === "medium") hunterSpeed = 4.2;
+      if (gameMode === "hard") hunterSpeed = 10.5;
+      if (gameMode === "hard" && currentLevel >= MAX_LEVELS) hunterSpeed = 24 * speedMultiplier;
+    }
+
+    function restartToLevelOneFromHunter() {
+      currentLevel = 1;
+      score = 0;
+      scoreEl.textContent = score;
+      boost = 100;
+      boostEl.textContent = "100";
+      rudiPos.set(0, 0, 0);
+      rudi.position.copy(rudiPos);
+      rudi.rotation.set(0, 0, 0);
+      velocity.set(0, 0, 0);
+      hint.textContent = "The hunter caught Rudi! Back to Level 1.";
+      spawnLevel(currentLevel);
+      spawnHunterDog();
+    }
+
+    function updateHunter(dt) {
+      if (!hunterActive || !hunterDog || meteorEnding || flyAwayEnding || finalBossEnding) return;
+      updateHunterSpeed();
+      const dx = rudi.position.x - hunterDog.position.x;
+      const dz = rudi.position.z - hunterDog.position.z;
+      const dist = Math.hypot(dx, dz);
+      if (dist > 0.1) {
+        hunterDog.position.x += (dx / dist) * hunterSpeed * dt;
+        hunterDog.position.z += (dz / dist) * hunterSpeed * dt;
+      }
+      const walk = performance.now() * 0.008 * Math.max(1, hunterSpeed);
+      hunterDog.position.y = 1.4 + Math.abs(Math.sin(walk)) * 0.16;
+      hunterDog.lookAt(rudi.position.x, hunterDog.position.y, rudi.position.z);
+
+      hunterDog.traverse(part => {
+        if (!part.userData) return;
+
+        if (part.userData.kind === "arm") {
+          const side = part.position.x < 0 ? 1 : -1;
+          part.rotation.z = part.userData.baseRotationZ + Math.sin(walk) * 0.42 * side;
+          part.rotation.x = Math.cos(walk) * 0.15;
+        }
+
+        if (part.userData.kind === "leg") {
+          const offset = part.position.x > 0 ? Math.PI : 0;
+          part.rotation.x = Math.sin(walk + offset) * 0.65;
+        }
+      });
+      if (dist < 3.1) restartToLevelOneFromHunter();
+    }
+
+    function spawnFinalBossStar() {
+      if (finalBossStar) scene.remove(finalBossStar);
+      finalBossStar = new THREE.Mesh(
+        new THREE.OctahedronGeometry(5.2, 0),
+        new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0x0044ff, emissiveIntensity: 2.4, roughness: 0.2 })
+      );
+      finalBossStar.position.copy(randomPos(480));
+      finalBossStar.position.y = 4.5;
+      scene.add(finalBossStar);
+      finalBossStarActive = true;
+      hint.textContent = "Final star appeared! Grab it to destroy the hunter!";
+    }
+
+    function triggerFinalBossEnding() {
+      if (!finalBossStar || !hunterDog || finalBossEnding) return;
+      finalBossEnding = true;
+      finalBossTimer = 0;
+      finalBossStarActive = false;
+      finalBossStar.userData.cutscene = {
+        startRudiPos: rudi.position.clone(),
+        grabPos: finalBossStar.position.clone(),
+        throwStart: null,
+        boomMade: false
+      };
+      velocity.set(0, 0, 0);
+      zoomLocked = false;
+      hud.style.display = "none";
+      hint.style.display = "none";
+      joystickBase.style.display = "none";
+      zoomButton.style.display = "none";
+      zoomToggleButton.style.display = "none";
+    }
+
+    function updateFinalBossEnding(dt) {
+      finalBossTimer += dt;
+      if (!finalBossStar) return;
+
+      const data = finalBossStar.userData.cutscene || (finalBossStar.userData.cutscene = {
+        startRudiPos: rudi.position.clone(),
+        grabPos: finalBossStar.position.clone(),
+        throwStart: null,
+        boomMade: false
+      });
+
+      const grabPos = data.grabPos.clone();
+      grabPos.y = 0;
+      const hunterTarget = hunterDog
+        ? new THREE.Vector3(hunterDog.position.x, hunterDog.position.y + 2.2, hunterDog.position.z)
+        : grabPos.clone();
+
+      finalBossStar.rotation.x += dt * 12;
+      finalBossStar.rotation.y += dt * 16;
+      const pulse = (Math.sin(performance.now() * 0.035) + 1) / 2;
+      finalBossStar.material.color.setRGB(1, 0, pulse);
+      finalBossStar.material.emissive.setRGB(0, pulse, 1);
+
+      if (finalBossTimer < 1.4) {
+        const t = THREE.MathUtils.clamp(finalBossTimer / 1.4, 0, 1);
+        const eased = easeInOut(t);
+        rudi.position.lerpVectors(data.startRudiPos, grabPos, eased);
+        rudiPos.copy(rudi.position);
+        rudi.lookAt(grabPos.x + 1, rudi.position.y, grabPos.z);
+        rudi.rotation.z = Math.sin(performance.now() * 0.03) * 0.18;
+        finalBossStar.position.y = 5.5 + Math.sin(performance.now() * 0.018) * 1.1;
+        camera.position.lerp(new THREE.Vector3(rudi.position.x + 24, 18, rudi.position.z + 32), 0.08);
+        camera.lookAt(finalBossStar.position);
+        return;
+      }
+
+      if (finalBossTimer < 2.2) {
+        if (!data.throwStart) data.throwStart = finalBossStar.position.clone();
+        finalBossStar.position.copy(rudi.position).add(new THREE.Vector3(1.8, 3.4, 0));
+        rudi.rotation.y += dt * 7;
+        rudi.rotation.z = Math.sin(performance.now() * 0.04) * 0.28;
+        camera.position.lerp(new THREE.Vector3(rudi.position.x + 18, 16, rudi.position.z + 26), 0.09);
+        camera.lookAt(rudi.position.x, rudi.position.y + 2.6, rudi.position.z);
+        return;
+      }
+
+      if (finalBossTimer < 3.45 && hunterDog) {
+        const t = THREE.MathUtils.clamp((finalBossTimer - 2.2) / 1.25, 0, 1);
+        const start = data.throwStart || rudi.position.clone().add(new THREE.Vector3(1.8, 3.4, 0));
+        const arc = Math.sin(t * Math.PI) * 28;
+        finalBossStar.position.lerpVectors(start, hunterTarget, easeInOut(t));
+        finalBossStar.position.y += arc;
+        rudi.lookAt(hunterDog.position.x, rudi.position.y, hunterDog.position.z);
+        camera.position.lerp(new THREE.Vector3((rudi.position.x + hunterDog.position.x) / 2 + 28, 24, (rudi.position.z + hunterDog.position.z) / 2 + 36), 0.07);
+        camera.lookAt(finalBossStar.position);
+        return;
+      }
+
+      if (hunterDog && !data.boomMade) {
+        data.boomMade = true;
+        const boom = new THREE.Mesh(
+          new THREE.SphereGeometry(22, 32, 16),
+          new THREE.MeshBasicMaterial({ color: 0xff2200, transparent: true, opacity: 0.82 })
+        );
+        boom.position.copy(hunterDog.position);
+        scene.add(boom);
+
+        const shockwave = new THREE.Mesh(
+          new THREE.TorusGeometry(16, 2.2, 12, 72),
+          new THREE.MeshBasicMaterial({ color: 0x00aaff, transparent: true, opacity: 0.75 })
+        );
+        shockwave.position.copy(hunterDog.position);
+        shockwave.position.y = 2.4;
+        shockwave.rotation.x = Math.PI / 2;
+        scene.add(shockwave);
+
+        setTimeout(() => scene.remove(boom), 900);
+        setTimeout(() => scene.remove(shockwave), 900);
+        scene.remove(hunterDog);
+        hunterDog = null;
+        hunterActive = false;
+        explosionFlash = 1;
+      }
+
+      if (finalBossStar) {
+        scene.remove(finalBossStar);
+        finalBossStar = null;
+      }
+      showEnding("🐶 Rudi grabbed the flashing star and YEETED it at the Dog Catcher! 💥", true);
+    }
+
+    function mat(color, roughness = 0.65) {
+      return new THREE.MeshStandardMaterial({
+        color,
+        roughness,
+        metalness: 0.04,
+        flatShading: false
+      });
+    }
+
+    function box(w, h, d, color) {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d, 8, 8, 8), mat(color));
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      return mesh;
+    }
+
+    function cone(r, h, color, sides = 32) {
+      const mesh = new THREE.Mesh(new THREE.ConeGeometry(r, h, Math.max(24, sides)), mat(color));
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      return mesh;
+    }
+
+    function randomPos(spread = 520) {
+      return new THREE.Vector3((Math.random() - 0.5) * spread, 0, (Math.random() - 0.5) * spread);
+    }
+
+    function makeRudi() {
+      const r = new THREE.Group();
+
+      const body = box(2.8, 1.15, 1.25, 0xf5f5f2);
+      body.position.y = 1.05;
+      body.userData.kind = "body";
+      r.add(body);
+
+      const sideSpot = box(1.15, 0.92, 0.22, 0x111111);
+      sideSpot.position.set(-0.2, 1.08, -0.53);
+      r.add(sideSpot);
+
+      const chest = box(1.1, 0.95, 1.05, 0xf5f5f2);
+      chest.position.set(1.15, 1.02, 0);
+      r.add(chest);
+
+      const head = box(1.25, 1, 1, 0x101010);
+      head.position.set(2.05, 1.52, 0);
+      head.userData.kind = "head";
+      r.add(head);
+
+      const faceStripe = box(0.28, 0.82, 0.28, 0xf8f8f8);
+      faceStripe.position.set(2.55, 1.5, 0);
+      r.add(faceStripe);
+
+      const snout = box(0.72, 0.42, 0.52, 0xf2f2f2);
+      snout.position.set(2.7, 1.28, 0);
+      r.add(snout);
+
+      const nose = box(0.16, 0.16, 0.2, 0x000000);
+      nose.position.set(3.08, 1.34, 0);
+      r.add(nose);
+
+      const ear1 = cone(0.34, 0.95, 0x0d0d0d, 4);
+      ear1.position.set(1.72, 2.18, -0.38);
+      ear1.userData.kind = "ear";
+      ear1.rotation.set(0.15, 0, 0.42);
+      r.add(ear1);
+
+      const ear2 = cone(0.34, 0.95, 0x0d0d0d, 4);
+      ear2.position.set(1.72, 2.18, 0.38);
+      ear2.userData.kind = "ear";
+      ear2.rotation.set(-0.15, 0, 0.42);
+      r.add(ear2);
+
+      const tail = cone(0.18, 0.95, 0xf5f5f5, 5);
+      tail.position.set(-1.72, 1.42, 0);
+      tail.userData.kind = "tail";
+      tail.rotation.set(0.3, 0, -Math.PI / 2.9);
+      r.add(tail);
+
+      for (const z of [-0.42, 0.42]) {
+        for (const x of [-0.85, 0.9]) {
+          const leg = box(0.3, 0.95, 0.3, 0xf1f1ef);
+          leg.position.set(x, 0.45, z);
+          leg.userData.kind = "leg";
+          r.add(leg);
+        }
+      }
+
+      for (const z of [-0.26, 0.26]) {
+        const eye = box(0.12, 0.12, 0.06, 0xfaf6df);
+        eye.position.set(2.66, 1.64, z);
+        r.add(eye);
+
+        const pupil = box(0.05, 0.05, 0.03, 0x111111);
+        pupil.position.set(2.73, 1.64, z);
+        r.add(pupil);
+      }
+
+      r.scale.set(1.08, 1.38, 1.08);
+      return r;
+    }
+
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(1600, 1600, 80, 80), mat(0xc9c2b8));
+    ground.receiveShadow = true;
+    ground.rotation.x = -Math.PI / 2;
+    scene.add(ground);
+
+    const carpetDots = new THREE.Group();
+    for (let x = -760; x < 760; x += 28) {
+      for (let z = -760; z < 760; z += 28) {
+        const tile = new THREE.Mesh(new THREE.BoxGeometry(6, 0.02, 3), mat(0xb8afa5));
+        tile.position.set(x + Math.sin(z) * 0.25, 0.01, z);
+        carpetDots.add(tile);
+      }
+    }
+    scene.add(carpetDots);
+
+    const rudi = makeRudi();
+    scene.add(rudi);
+
+    const rudiParts = { legs: [], ears: [], tail: null, head: null };
+    rudi.traverse(part => {
+      if (part.userData.kind === "leg") rudiParts.legs.push(part);
+      if (part.userData.kind === "ear") rudiParts.ears.push(part);
+      if (part.userData.kind === "tail") rudiParts.tail = part;
+      if (part.userData.kind === "head") rudiParts.head = part;
+    });
+
+    const levelThemes = [
+      { name: "Clean Bedroom", floor: 0xc9c2b8, wall: 0xe8e8e5, sky: 0x98dfff, wood: 0x8a5c37, dark: 0x5c3d28, map: "house", sun: true },
+      { name: "Blue Maze", floor: 0x7799cc, wall: 0xdfeaff, sky: 0x8fcfff, wood: 0x775533, dark: 0x334466, map: "maze", sun: true },
+      { name: "Lava Islands", floor: 0x3b0909, wall: 0x5a1710, sky: 0xff7a2f, wood: 0x6b2e16, dark: 0x190808, map: "islands", sun: false },
+      { name: "Neon City", floor: 0x222244, wall: 0x1a1a2e, sky: 0x5533aa, wood: 0x442266, dark: 0x111122, map: "city", sun: false },
+      { name: "Grass Hills", floor: 0x74b857, wall: 0xd8ffd2, sky: 0xaeefff, wood: 0x8a5c37, dark: 0x335522, map: "hills", sun: true },
+      { name: "Snow Fort", floor: 0xf1f6ff, wall: 0xdbe9ff, sky: 0xb9e5ff, wood: 0x9b8c7a, dark: 0x4a5a66, map: "fort", sun: true },
+      { name: "Gold Temple", floor: 0xd8b64a, wall: 0xffe28a, sky: 0xffd36b, wood: 0x9b621f, dark: 0x5b3510, map: "temple", sun: true },
+      { name: "Void Platforms", floor: 0x111111, wall: 0x222222, sky: 0x050510, wood: 0x333333, dark: 0x000000, map: "platforms", sun: false },
+      { name: "Candy Forest", floor: 0xffb6d5, wall: 0xffe3f0, sky: 0xbdefff, wood: 0xc98dff, dark: 0x8844aa, map: "candy", sun: true },
+      { name: "Tech Factory", floor: 0x303844, wall: 0x556677, sky: 0x87a8c8, wood: 0x223344, dark: 0x101820, map: "factory", sun: false },
+      { name: "Moon Yard", floor: 0x777777, wall: 0xbdbdbd, sky: 0x111133, wood: 0x555555, dark: 0x222222, map: "craters", sun: false },
+      { name: "Pirate Deck", floor: 0x6b4425, wall: 0x87ceeb, sky: 0x65b7ff, wood: 0x8b5a2b, dark: 0x3b2412, map: "ship", sun: true },
+      { name: "Crystal Cave", floor: 0x3f2a66, wall: 0x7a5cff, sky: 0x160a2e, wood: 0x452a70, dark: 0x170821, map: "crystal", sun: false },
+      { name: "Kitchen Chaos", floor: 0xf2e7d0, wall: 0xffffff, sky: 0xd7f2ff, wood: 0xa06a3b, dark: 0x333333, map: "kitchen", sun: true },
+      { name: "Arcade Grid", floor: 0x101020, wall: 0x202040, sky: 0x000018, wood: 0x4422aa, dark: 0x050510, map: "arcade", sun: false },
+      { name: "Jungle Blocks", floor: 0x2f7d32, wall: 0x77aa55, sky: 0x9ce6ff, wood: 0x604020, dark: 0x1c421d, map: "jungle", sun: true },
+      { name: "Desert Bones", floor: 0xd2a45f, wall: 0xf2d49b, sky: 0xffc36b, wood: 0x8a5c37, dark: 0x5b3510, map: "desert", sun: true },
+      { name: "Cloud Steps", floor: 0xffffff, wall: 0xd7f5ff, sky: 0x88d8ff, wood: 0xeeeeff, dark: 0x99bbcc, map: "clouds", sun: true },
+      { name: "Basement Pipes", floor: 0x444444, wall: 0x555555, sky: 0x222222, wood: 0x333333, dark: 0x111111, map: "pipes", sun: false },
+      { name: "Final Dog Park", floor: 0x60a840, wall: 0xbdf2a0, sky: 0x66ccff, wood: 0x8a5c37, dark: 0x2f552f, map: "park", sun: true }
+    ];
+
+    function addRoomMesh(geometry, material, position, rotation = [0, 0, 0]) {
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.set(position[0], position[1], position[2]);
+      mesh.rotation.set(rotation[0], rotation[1], rotation[2]);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      scene.add(mesh);
+      roomObjects.push(mesh);
+      return mesh;
+    }
+
+    function makeRoom(level = 1) {
+      while (roomObjects.length) scene.remove(roomObjects.pop());
+
+      const theme = levelThemes[(level - 1) % levelThemes.length];
+      scene.background = new THREE.Color(theme.sky);
+      scene.fog = new THREE.Fog(theme.sky, 180, 850);
+      ground.material.color.setHex(theme.floor);
+
+      carpetDots.children.forEach((tile, i) => tile.material.color.setHex(i % 3 === 0 ? theme.floor : theme.wall));
+
+      const wallMat = mat(theme.wall);
+      const woodMat = mat(theme.wood);
+      const darkWood = mat(theme.dark);
+      const accentMat = mat([0xff5555, 0x55aaff, 0xffff55, 0xff55ff, 0x55ffaa][level % 5]);
+
+      if (theme.map === "house") {
+        addRoomMesh(new THREE.BoxGeometry(720, 45, 1), wallMat, [0, 22.5, 360]);
+        addRoomMesh(new THREE.BoxGeometry(720, 45, 1), wallMat, [0, 22.5, -360]);
+        addRoomMesh(new THREE.BoxGeometry(1, 45, 720), wallMat, [-360, 22.5, 0]);
+        addRoomMesh(new THREE.BoxGeometry(1, 45, 720), wallMat, [360, 22.5, 0]);
+        addRoomMesh(new THREE.BoxGeometry(12, 1.2, 9), woodMat, [0, 0.8, -50]);
+        addRoomMesh(new THREE.BoxGeometry(11, 1.2, 8), mat(0xf5f5f5), [0, 1.65, -50]);
+        addRoomMesh(new THREE.BoxGeometry(8, 6, 2), darkWood, [90, 3, -80]);
+        addRoomMesh(new THREE.BoxGeometry(5, 2, 2), woodMat, [-120, 1, 70]);
+      }
+
+      if (theme.map === "maze") {
+        for (let i = -300; i <= 300; i += 60) {
+          addRoomMesh(new THREE.BoxGeometry(12, 12, 170), wallMat, [i, 6, Math.sin(i * 0.03) * 90]);
+          addRoomMesh(new THREE.BoxGeometry(140, 10, 12), accentMat, [Math.cos(i * 0.04) * 160, 5, i]);
+        }
+      }
+
+      if (theme.map === "islands") {
+        for (let i = 0; i < 28; i++) {
+          const x = Math.sin(i * 0.8) * 180;
+          const z = Math.cos(i * 1.2) * 150;
+          addRoomMesh(new THREE.CylinderGeometry(12 + (i % 4) * 4, 16 + (i % 3) * 4, 8, 8), accentMat, [x, 4, z]);
+        }
+      }
+
+      if (theme.map === "city") {
+        for (let i = 0; i < 50; i++) {
+          const x = (Math.random() - 0.5) * 520;
+          const z = (Math.random() - 0.5) * 520;
+          const h = 8 + Math.random() * 55;
+          addRoomMesh(new THREE.BoxGeometry(12, h, 12), i % 2 ? accentMat : darkWood, [x, h / 2, z]);
+        }
+      }
+
+      if (theme.map === "hills") {
+        for (let i = 0; i < 35; i++) {
+          const x = (Math.random() - 0.5) * 520;
+          const z = (Math.random() - 0.5) * 520;
+          addRoomMesh(new THREE.ConeGeometry(15 + Math.random() * 20, 10 + Math.random() * 12, 8), accentMat, [x, 5, z]);
+        }
+      }
+
+      if (theme.map === "fort") {
+        for (let i = -220; i <= 220; i += 55) {
+          addRoomMesh(new THREE.BoxGeometry(35, 18, 35), wallMat, [i, 9, -180]);
+          addRoomMesh(new THREE.BoxGeometry(35, 18, 35), wallMat, [i, 9, 180]);
+          addRoomMesh(new THREE.BoxGeometry(35, 18, 35), wallMat, [-220, 9, i]);
+          addRoomMesh(new THREE.BoxGeometry(35, 18, 35), wallMat, [220, 9, i]);
+        }
+      }
+
+      if (theme.map === "temple") {
+        for (let ring = 0; ring < 4; ring++) {
+          const radius = 55 + ring * 45;
+          for (let i = 0; i < 12; i++) {
+            const a = i / 12 * Math.PI * 2;
+            addRoomMesh(new THREE.CylinderGeometry(5, 5, 28, 10), accentMat, [Math.cos(a) * radius, 14, Math.sin(a) * radius]);
+          }
+        }
+      }
+
+      if (theme.map === "platforms") {
+        for (let i = 0; i < 36; i++) {
+          const x = Math.sin(i * 0.7) * 210;
+          const z = Math.cos(i * 1.3) * 210;
+          const y = 3 + (i % 6) * 4;
+          addRoomMesh(new THREE.BoxGeometry(25, 2, 25), accentMat, [x, y, z]);
+        }
+      }
+
+      if (theme.map === "candy") {
+        for (let i = 0; i < 34; i++) {
+          const x = (Math.random() - 0.5) * 520;
+          const z = (Math.random() - 0.5) * 520;
+          addRoomMesh(new THREE.CylinderGeometry(6, 6, 25, 12), i % 2 ? accentMat : wallMat, [x, 12.5, z], [0, 0, Math.PI / 12]);
+        }
+      }
+
+      if (theme.map === "factory") {
+        for (let i = 0; i < 26; i++) {
+          const x = (i - 13) * 22;
+          addRoomMesh(new THREE.CylinderGeometry(5, 5, 22, 24), darkWood, [x, 11, -90]);
+          addRoomMesh(new THREE.BoxGeometry(12, 4, 180), accentMat, [x, 2, 55]);
+        }
+      }
+
+      if (theme.map === "craters") {
+        for (let i = 0; i < 35; i++) addRoomMesh(new THREE.SphereGeometry(8 + Math.random() * 18, 32, 16), accentMat, [(Math.random() - .5) * 560, 2, (Math.random() - .5) * 560], [0,0,0]);
+      }
+
+      if (theme.map === "ship") {
+        addRoomMesh(new THREE.BoxGeometry(520, 8, 170), woodMat, [0, 4, 0]);
+        for (let i = -240; i <= 240; i += 40) addRoomMesh(new THREE.BoxGeometry(8, 26, 8), darkWood, [i, 13, -95]);
+        addRoomMesh(new THREE.CylinderGeometry(6, 6, 150, 24), darkWood, [0, 75, 0], [Math.PI / 2, 0, 0]);
+      }
+
+      if (theme.map === "crystal") {
+        for (let i = 0; i < 45; i++) addRoomMesh(new THREE.ConeGeometry(6 + Math.random() * 8, 30 + Math.random() * 45, 32), accentMat, [(Math.random() - .5) * 560, 15, (Math.random() - .5) * 560]);
+      }
+
+      if (theme.map === "kitchen") {
+        for (let i = -260; i <= 260; i += 80) addRoomMesh(new THREE.BoxGeometry(55, 20, 55), woodMat, [i, 10, -160]);
+        addRoomMesh(new THREE.BoxGeometry(90, 55, 55), darkWood, [170, 27.5, 130]);
+        addRoomMesh(new THREE.BoxGeometry(120, 8, 65), accentMat, [-150, 4, 100]);
+      }
+
+      if (theme.map === "arcade") {
+        for (let i = 0; i < 30; i++) addRoomMesh(new THREE.BoxGeometry(18, 38, 14), i % 2 ? accentMat : darkWood, [(Math.random() - .5) * 540, 19, (Math.random() - .5) * 540]);
+      }
+
+      if (theme.map === "jungle") {
+        for (let i = 0; i < 45; i++) {
+          const x = (Math.random() - .5) * 580, z = (Math.random() - .5) * 580;
+          addRoomMesh(new THREE.CylinderGeometry(4, 5, 32, 16), woodMat, [x, 16, z]);
+          addRoomMesh(new THREE.SphereGeometry(16, 32, 16), accentMat, [x, 36, z]);
+        }
+      }
+
+      if (theme.map === "desert") {
+        for (let i = 0; i < 30; i++) addRoomMesh(new THREE.ConeGeometry(12 + Math.random() * 20, 8 + Math.random() * 12, 32), accentMat, [(Math.random() - .5) * 560, 5, (Math.random() - .5) * 560]);
+      }
+
+      if (theme.map === "clouds") {
+        for (let i = 0; i < 38; i++) addRoomMesh(new THREE.SphereGeometry(18 + Math.random() * 18, 32, 16), wallMat, [(Math.random() - .5) * 560, 8 + Math.random() * 38, (Math.random() - .5) * 560]);
+      }
+
+      if (theme.map === "pipes") {
+        for (let i = -280; i <= 280; i += 70) {
+          addRoomMesh(new THREE.CylinderGeometry(7, 7, 520, 24), accentMat, [i, 14, 0], [Math.PI / 2, 0, 0]);
+          addRoomMesh(new THREE.CylinderGeometry(5, 5, 520, 24), darkWood, [0, 8, i], [0, 0, Math.PI / 2]);
+        }
+      }
+
+      if (theme.map === "park") {
+        for (let i = 0; i < 24; i++) addRoomMesh(new THREE.BoxGeometry(18, 10, 18), woodMat, [(Math.random() - .5) * 580, 5, (Math.random() - .5) * 580]);
+        for (let i = 0; i < 20; i++) addRoomMesh(new THREE.SphereGeometry(12, 32, 16), accentMat, [(Math.random() - .5) * 580, 12, (Math.random() - .5) * 580]);
+      }
+
+      addBetterLevelDetails(level, theme, wallMat, woodMat, darkWood, accentMat);
+
+      sun.visible = !!theme.sun;
+      sun.intensity = theme.sun ? 2.4 : 0;
+      hemiLight.intensity = theme.sun ? 1.35 : 2.2;
+    }
+
+
+    function addBetterLevelDetails(level, theme, wallMat, woodMat, darkWood, accentMat) {
+      const add = addRoomMesh;
+
+      function ringObjects(radius, count, maker) {
+        for (let i = 0; i < count; i++) {
+          const a = (i / count) * Math.PI * 2;
+          maker(Math.cos(a) * radius, Math.sin(a) * radius, i, a);
+        }
+      }
+
+      function pathMarkers(color = 0xffffff) {
+        const markerMat = mat(color);
+        for (let i = -6; i <= 6; i++) {
+          add(new THREE.CylinderGeometry(4, 4, 0.35, 24), markerMat, [i * 28, 0.22, Math.sin(i * 0.9) * 45]);
+        }
+      }
+
+      if (theme.map === "house") {
+        add(new THREE.BoxGeometry(80, 5, 55), mat(0x7b4a2b), [-115, 2.5, -110]);
+        add(new THREE.BoxGeometry(70, 3, 45), mat(0x4267b2), [-115, 7, -110]);
+        add(new THREE.BoxGeometry(28, 32, 18), darkWood, [135, 16, 130]);
+        add(new THREE.BoxGeometry(90, 12, 8), woodMat, [0, 6, 210]);
+        pathMarkers(0xfff2aa);
+      }
+
+      if (theme.map === "maze") {
+        add(new THREE.TorusGeometry(80, 3, 12, 64), accentMat, [0, 5, 0], [Math.PI / 2, 0, 0]);
+        ringObjects(210, 10, (x, z, i) => {
+          add(new THREE.BoxGeometry(26, 20, 8), i % 2 ? wallMat : accentMat, [x, 10, z], [0, (i / 10) * Math.PI, 0]);
+        });
+      }
+
+      if (theme.map === "islands") {
+        for (let i = 0; i < 12; i++) {
+          const x = Math.sin(i * 0.72) * 240;
+          const z = Math.cos(i * 0.72) * 240;
+          add(new THREE.CylinderGeometry(22, 28, 10, 32), mat(0x2d160d), [x, 5, z]);
+          add(new THREE.ConeGeometry(18, 42, 32), mat(0xff4a00), [x, 31, z]);
+        }
+        add(new THREE.TorusGeometry(160, 3, 12, 96), mat(0xffa000), [0, 1.4, 0], [Math.PI / 2, 0, 0]);
+      }
+
+      if (theme.map === "city") {
+        for (let i = 0; i < 9; i++) {
+          const x = (i - 4) * 50;
+          add(new THREE.BoxGeometry(26, 12, 130), mat(0x111133), [x, 6, 0]);
+          add(new THREE.BoxGeometry(8, 42 + i * 4, 8), accentMat, [x, 21 + i * 2, 85]);
+        }
+        pathMarkers(0x00ffff);
+      }
+
+      if (theme.map === "hills") {
+        ringObjects(160, 16, (x, z, i) => {
+          add(new THREE.SphereGeometry(18 + (i % 3) * 8, 32, 16), mat(i % 2 ? 0x5ca840 : 0x8bdc5d), [x, 9, z]);
+        });
+        add(new THREE.CylinderGeometry(10, 10, 70, 24), woodMat, [0, 35, 0]);
+        add(new THREE.SphereGeometry(38, 32, 16), accentMat, [0, 76, 0]);
+      }
+
+      if (theme.map === "fort") {
+        add(new THREE.CylinderGeometry(70, 75, 10, 6), mat(0xe8f5ff), [0, 5, 0]);
+        for (let i = 0; i < 4; i++) {
+          const a = i * Math.PI / 2;
+          add(new THREE.CylinderGeometry(18, 18, 45, 16), wallMat, [Math.cos(a) * 150, 22.5, Math.sin(a) * 150]);
+        }
+      }
+
+      if (theme.map === "temple") {
+        add(new THREE.CylinderGeometry(55, 72, 12, 6), mat(0xf7c948), [0, 6, 0]);
+        add(new THREE.ConeGeometry(78, 58, 4), mat(0xffdd55), [0, 47, 0], [0, Math.PI / 4, 0]);
+        pathMarkers(0xfff0a0);
+      }
+
+      if (theme.map === "platforms") {
+        for (let i = 0; i < 8; i++) {
+          const a = i * Math.PI / 4;
+          add(new THREE.BoxGeometry(60, 3, 18), accentMat, [Math.cos(a) * 120, 14 + i * 3, Math.sin(a) * 120], [0, -a, 0]);
+        }
+        add(new THREE.OctahedronGeometry(24, 0), mat(0x8844ff), [0, 55, 0]);
+      }
+
+      if (theme.map === "candy") {
+        for (let i = 0; i < 16; i++) {
+          const x = (Math.random() - .5) * 500;
+          const z = (Math.random() - .5) * 500;
+          add(new THREE.CylinderGeometry(7, 7, 38, 16), mat(0xffffff), [x, 19, z]);
+          add(new THREE.TorusGeometry(14, 4, 12, 32), mat(i % 2 ? 0xff4fb8 : 0x7ee7ff), [x, 41, z], [Math.PI / 2, 0, 0]);
+        }
+      }
+
+      if (theme.map === "factory") {
+        for (let i = -3; i <= 3; i++) {
+          add(new THREE.BoxGeometry(18, 24, 260), mat(0x1b2430), [i * 54, 12, 0]);
+          add(new THREE.CylinderGeometry(10, 10, 80, 24), accentMat, [i * 54, 42, -150], [Math.PI / 2, 0, 0]);
+        }
+        add(new THREE.BoxGeometry(260, 8, 22), mat(0xffaa00), [0, 4, 180]);
+      }
+
+      if (theme.map === "craters") {
+        ringObjects(190, 18, (x, z, i) => {
+          add(new THREE.TorusGeometry(14 + (i % 3) * 5, 2, 8, 32), mat(0x555555), [x, 1.1, z], [Math.PI / 2, 0, 0]);
+        });
+        add(new THREE.SphereGeometry(32, 32, 16), mat(0xdddddd), [0, 38, -180]);
+      }
+
+      if (theme.map === "ship") {
+        add(new THREE.CylinderGeometry(8, 8, 95, 24), darkWood, [0, 47, 0]);
+        add(new THREE.BoxGeometry(70, 55, 3), mat(0xf8f0d0), [0, 65, 0]);
+        for (let i = -4; i <= 4; i++) add(new THREE.BoxGeometry(20, 7, 12), accentMat, [i * 42, 9, 65]);
+      }
+
+      if (theme.map === "crystal") {
+        ringObjects(155, 14, (x, z, i) => {
+          add(new THREE.ConeGeometry(10 + i % 4, 65, 5), mat(i % 2 ? 0x9b7cff : 0x55ffff), [x, 32, z]);
+        });
+        add(new THREE.OctahedronGeometry(36, 0), mat(0x88ffff), [0, 42, 0]);
+      }
+
+      if (theme.map === "kitchen") {
+        add(new THREE.BoxGeometry(180, 12, 90), mat(0xffffff), [0, 6, 0]);
+        add(new THREE.CylinderGeometry(18, 18, 35, 32), mat(0xc0c0c0), [-90, 23, 0]);
+        add(new THREE.CylinderGeometry(12, 12, 26, 32), mat(0xff4444), [95, 19, 10]);
+        add(new THREE.BoxGeometry(70, 65, 12), mat(0x222222), [0, 32, 190]);
+      }
+
+      if (theme.map === "arcade") {
+        for (let i = 0; i < 18; i++) {
+          const x = (i % 6 - 2.5) * 75;
+          const z = (Math.floor(i / 6) - 1) * 95;
+          add(new THREE.BoxGeometry(24, 42, 16), mat(i % 2 ? 0xff00ff : 0x00ffff), [x, 21, z]);
+          add(new THREE.BoxGeometry(18, 12, 2), mat(0x111111), [x, 32, z + 9]);
+        }
+      }
+
+      if (theme.map === "jungle") {
+        for (let i = 0; i < 12; i++) {
+          const a = i * Math.PI * 2 / 12;
+          add(new THREE.CylinderGeometry(5, 6, 60, 12), woodMat, [Math.cos(a)*210, 30, Math.sin(a)*210]);
+          add(new THREE.BoxGeometry(90, 5, 12), mat(0x7a4a24), [Math.cos(a)*110, 28, Math.sin(a)*110], [0, -a, 0]);
+        }
+      }
+
+      if (theme.map === "desert") {
+        for (let i = 0; i < 10; i++) {
+          const x = (Math.random() - .5) * 520;
+          const z = (Math.random() - .5) * 520;
+          add(new THREE.CylinderGeometry(5, 6, 30, 12), mat(0x2f8f3a), [x, 15, z]);
+          add(new THREE.CylinderGeometry(3, 3, 18, 12), mat(0x2f8f3a), [x + 12, 20, z], [0, 0, Math.PI / 3]);
+        }
+        add(new THREE.TorusGeometry(150, 3, 8, 96), mat(0xffe0a0), [0, 1.2, 0], [Math.PI / 2, 0, 0]);
+      }
+
+      if (theme.map === "clouds") {
+        for (let i = 0; i < 16; i++) {
+          add(new THREE.BoxGeometry(55, 4, 55), mat(0xffffff), [(Math.random()-.5)*440, 22 + (i%5)*10, (Math.random()-.5)*440]);
+        }
+        add(new THREE.TorusGeometry(130, 4, 12, 96), mat(0xdff8ff), [0, 36, 0], [Math.PI / 2, 0, 0]);
+      }
+
+      if (theme.map === "pipes") {
+        for (let i = 0; i < 7; i++) {
+          add(new THREE.TorusGeometry(42 + i * 16, 4, 12, 64), i % 2 ? accentMat : darkWood, [0, 16 + i * 3, 0], [Math.PI / 2, 0, 0]);
+        }
+        add(new THREE.BoxGeometry(80, 80, 80), mat(0x222222), [0, 40, -210]);
+      }
+
+      if (theme.map === "park") {
+        add(new THREE.TorusGeometry(180, 5, 12, 96), mat(0xffee66), [0, 3, 0], [Math.PI / 2, 0, 0]);
+        for (let i = 0; i < 12; i++) {
+          const a = i * Math.PI * 2 / 12;
+          add(new THREE.ConeGeometry(12, 50, 32), mat(0x2f7d32), [Math.cos(a)*230, 25, Math.sin(a)*230]);
+        }
+        add(new THREE.BoxGeometry(130, 10, 26), mat(0x8a5c37), [0, 5, 0]);
+      }
+    }
+
+    function makeTreat() {
+      const treat = cone(1.15, 1.15, 0xf6c34f, 4);
+      treat.rotation.x = Math.PI / 2;
+      treat.position.copy(randomPos(620));
+      treat.position.y = 1.05;
+      scene.add(treat);
+      treats.push(treat);
+    }
+
+    function makePowerUp(color, type) {
+      const orb = new THREE.Mesh(new THREE.SphereGeometry(3.2, 16, 8), mat(color));
+      const p = randomPos(600);
+      orb.position.set(p.x, 3.3, p.z);
+      orb.userData.type = type;
+      scene.add(orb);
+      powerUps.push(orb);
+      powerCountEl.textContent = powerUps.length;
+    }
+
+    const powerTypes = [
+      [0x1e9bff, "speed"],
+      [0xffdd22, "big"],
+      [0xff3333, "small"],
+      [0xff55ff, "clone3"],
+      [0x00ccff, "clone1"]
+    ];
+
+    function spawnLevel(level) {
+      makeRoom(level);
+      while (treats.length) scene.remove(treats.pop());
+      while (powerUps.length) scene.remove(powerUps.pop());
+
+      const treatCount = Math.min(90, 32 + level * 5);
+      const powerCount = Math.max(6, 28 - level);
+      for (let i = 0; i < treatCount; i++) makeTreat();
+      for (let i = 0; i < powerCount; i++) {
+        const [color, type] = powerTypes[i % powerTypes.length];
+        makePowerUp(color, type);
+      }
+
+      levelDisplay.textContent = level;
+      if (typeof endingStar !== "undefined") moveEndingStar();
+      const theme = levelThemes[(level - 1) % levelThemes.length];
+      hint.textContent = `LEVEL ${level}: ${theme.name} • collect treats and survive the chaos`;
+      applyLevelMusic(level);
+    }
+
+    const endingStar = new THREE.Mesh(
+      new THREE.OctahedronGeometry(7, 0),
+      new THREE.MeshStandardMaterial({
+        color: 0xffff00,
+        emissive: 0xffee55,
+        emissiveIntensity: 2.6,
+        roughness: 0.25
+      })
+    );
+    const endingStarLight = new THREE.PointLight(0xffff66, 3, 120);
+    scene.add(endingStarLight);
+    function moveEndingStar() {
+      const p = randomPos(420);
+      endingStar.position.set(p.x, 8.5, p.z);
+      endingStar.visible = true;
+      if (!endingStar.parent) scene.add(endingStar);
+      if (typeof endingStarLight !== "undefined") {
+        endingStarLight.position.copy(endingStar.position);
+      }
+    }
+    moveEndingStar();
+    scene.add(endingStar);
+
+    const meteor = new THREE.Group();
+    const meteorTextureCanvas = document.createElement("canvas");
+    meteorTextureCanvas.width = 256;
+    meteorTextureCanvas.height = 256;
+    const meteorCtx = meteorTextureCanvas.getContext("2d");
+    meteorCtx.fillStyle = "#250000";
+    meteorCtx.fillRect(0, 0, 256, 256);
+    const lavaGradient = meteorCtx.createRadialGradient(128, 128, 10, 128, 128, 180);
+    lavaGradient.addColorStop(0, "#ffb000");
+    lavaGradient.addColorStop(0.35, "#ff3a00");
+    lavaGradient.addColorStop(0.7, "#7a0800");
+    lavaGradient.addColorStop(1, "#1b0000");
+    meteorCtx.fillStyle = lavaGradient;
+    meteorCtx.fillRect(0, 0, 256, 256);
+    for (let i = 0; i < 70; i++) {
+      meteorCtx.strokeStyle = i % 2 ? "#ff6a00" : "#ffd25a";
+      meteorCtx.lineWidth = i % 2 ? 7 : 3;
+      meteorCtx.beginPath();
+      meteorCtx.moveTo(Math.random() * 256, Math.random() * 256);
+      for (let j = 0; j < 4; j++) meteorCtx.lineTo(Math.random() * 256, Math.random() * 256);
+      meteorCtx.stroke();
+    }
+    const meteorTexture = new THREE.CanvasTexture(meteorTextureCanvas);
+    meteorTexture.wrapS = THREE.RepeatWrapping;
+    meteorTexture.wrapT = THREE.RepeatWrapping;
+    meteorTexture.repeat.set(2.2, 1.6);
+    const meteorCore = new THREE.Mesh(
+      new THREE.SphereGeometry(24, 96, 64),
+      new THREE.MeshStandardMaterial({
+        map: meteorTexture,
+        emissiveMap: meteorTexture,
+        emissive: 0xff3300,
+        emissiveIntensity: 1.35,
+        roughness: 0.38,
+        metalness: 0,
+        flatShading: false
+      })
+    );
+    meteor.add(meteorCore);
+    meteor.visible = false;
+    scene.add(meteor);
+    const meteorLight = new THREE.PointLight(0xffffff, 0, 700);
+    scene.add(meteorLight);
+
+    const titleScene = new THREE.Scene();
+    const titleCamera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+    titleCamera.position.set(0, 1.8, 13.5);
+    const titleBox = document.getElementById("titleRudi");
+    const titleRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    titleRenderer.setSize(titleBox.clientWidth || 320, titleBox.clientHeight || 260);
+    titleRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    titleBox.appendChild(titleRenderer.domElement);
+    titleScene.add(new THREE.HemisphereLight(0xffffff, 0x77aa66, 2.4));
+    const titleSun = new THREE.DirectionalLight(0xffffff, 2);
+    titleSun.position.set(4, 7, 5);
+    titleScene.add(titleSun);
+    const titleDog = makeRudi();
+    titleDog.position.set(0, -2.2, 0);
+    titleDog.rotation.y = Math.PI / 5;
+    titleDog.scale.setScalar(1.42);
+    titleScene.add(titleDog);
+
+    const audio = {
+      ctx: null,
+      ready: false,
+      masterGain: null,
+      musicGain: null,
+      musicTimer: null,
+      currentTheme: -1,
+      musicOn: false,
+      step: 0
+    };
+
+    // Original Rudi Foodi cozy menu-jazz music.
+    // Inspired by light console menu jazz, but not copied from any song.
+    const jazzThemes = [
+      { root: 261.63, scale: [0, 2, 4, 7, 9, 11, 12], chords: ["maj7", "six", "min7", "dom7"], swing: 310 },
+      { root: 293.66, scale: [0, 2, 3, 5, 7, 9, 10, 12], chords: ["min7", "dom7", "maj7", "six"], swing: 330 },
+      { root: 220.00, scale: [0, 3, 5, 7, 10, 12], chords: ["min7", "six", "dom7", "min7"], swing: 360 },
+      { root: 329.63, scale: [0, 2, 4, 7, 9, 12], chords: ["maj7", "dom7", "six", "min7"], swing: 285 },
+      { root: 246.94, scale: [0, 2, 4, 5, 7, 9, 11, 12], chords: ["six", "maj7", "min7", "dom7"], swing: 345 }
+    ];
+
+    function midiToRatio(semitones) {
+      return Math.pow(2, semitones / 12);
+    }
+
+    function chordIntervals(kind) {
+      if (kind === "maj7") return [0, 4, 7, 11];
+      if (kind === "min7") return [0, 3, 7, 10];
+      if (kind === "dom7") return [0, 4, 7, 10];
+      if (kind === "six") return [0, 4, 7, 9];
+      return [0, 4, 7];
+    }
+
+    function playMusicTone(freq, duration = 0.2, type = "triangle", volume = 0.05, destination = null) {
+      if (!audio.ready || !audio.ctx || !audio.musicOn) return;
+      const now = audio.ctx.currentTime;
+      const osc = audio.ctx.createOscillator();
+      const gain = audio.ctx.createGain();
+
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, now);
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, volume), now + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+      osc.connect(gain);
+      gain.connect(destination || audio.musicGain);
+      osc.start(now);
+      osc.stop(now + duration + 0.05);
+    }
+
+    function stopMusic() {
+      if (audio.musicTimer) clearTimeout(audio.musicTimer);
+      audio.musicTimer = null;
+      audio.currentTheme = -1;
+      audio.musicOn = false;
+      audio.step = 0;
+
+      if (audio.musicGain && audio.ctx) {
+        audio.musicGain.gain.cancelScheduledValues(audio.ctx.currentTime);
+        audio.musicGain.gain.setValueAtTime(0.0001, audio.ctx.currentTime);
+      }
+    }
+
+    function applyLevelMusic(level) {
+      if (!audio.ready || !audio.ctx) return;
+
+      const themeIndex = (level - 1) % jazzThemes.length;
+      stopMusic();
+
+      audio.currentTheme = themeIndex;
+      audio.musicOn = true;
+      audio.step = 0;
+
+      audio.musicGain.gain.cancelScheduledValues(audio.ctx.currentTime);
+      audio.musicGain.gain.setValueAtTime(0.0001, audio.ctx.currentTime);
+      audio.musicGain.gain.exponentialRampToValueAtTime(1.0, audio.ctx.currentTime + 0.15);
+
+      const theme = jazzThemes[themeIndex];
+
+      function musicLoop() {
+        if (!audio.musicOn || audio.currentTheme !== themeIndex) return;
+
+        const beat = audio.step % 8;
+        const bar = Math.floor(audio.step / 8);
+        const chordName = theme.chords[bar % theme.chords.length];
+        const rootMove = [0, 9, 2, 7][bar % 4];
+        const chordRoot = theme.root * midiToRatio(rootMove);
+
+        // Walking bass: low, soft, not earwormy.
+        const bassWalk = [0, 4, 7, 9, 7, 4, 2, 0][beat];
+        playMusicTone((theme.root / 4) * midiToRatio(rootMove + bassWalk), 0.28, "sine", 0.22);
+
+        // Chord stabs on offbeats, like cozy menu jazz.
+        if (beat === 1 || beat === 4 || beat === 6) {
+          const intervals = chordIntervals(chordName);
+          intervals.forEach((semi, i) => {
+            playMusicTone(chordRoot * midiToRatio(semi), 0.25 + i * 0.02, "triangle", 0.11);
+          });
+        }
+
+        // Random little noodle notes, so it does not loop the same melody forever.
+        if (beat === 2 || beat === 5 || Math.random() < 0.23) {
+          const semi = theme.scale[Math.floor(Math.random() * theme.scale.length)];
+          const octave = Math.random() < 0.35 ? 2 : 1;
+          const note = theme.root * octave * midiToRatio(rootMove + semi);
+          playMusicTone(note, 0.18 + Math.random() * 0.1, "sine", 0.13);
+        }
+
+        // Tiny "buttony" sparkle sometimes, but not every loop.
+        if (beat === 7 && Math.random() < 0.35) {
+          const semi = theme.scale[Math.floor(Math.random() * theme.scale.length)];
+          playMusicTone(theme.root * 2 * midiToRatio(rootMove + semi), 0.12, "triangle", 0.09);
+        }
+
+        audio.step++;
+
+        const swingDelay = beat % 2 === 0 ? theme.swing * 1.22 : theme.swing * 0.78;
+        const zoomBonus = zoomLocked ? 0.82 : 1;
+        audio.musicTimer = setTimeout(musicLoop, swingDelay * zoomBonus);
+      }
+
+      musicLoop();
+    }
+
+    function initAudio() {
+      if (audio.ready) {
+        if (audio.ctx && audio.ctx.state === "suspended") audio.ctx.resume();
+        return;
+      }
+
+      audio.ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+      audio.masterGain = audio.ctx.createGain();
+      audio.masterGain.gain.value = 1.0;
+      audio.masterGain.connect(audio.ctx.destination);
+
+      audio.musicGain = audio.ctx.createGain();
+      audio.musicGain.gain.value = 0.0001;
+      audio.musicGain.connect(audio.masterGain);
+
+      audio.ready = true;
+    }
+
+    function beep(freq, duration, type, volume) {
+      if (!audio.ready || !audio.ctx) return;
+      const osc = audio.ctx.createOscillator();
+      const gain = audio.ctx.createGain();
+      const now = audio.ctx.currentTime;
+
+      osc.type = type || "sine";
+      osc.frequency.value = freq || 440;
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(volume || 0.04, now + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + (duration || 0.1));
+
+      osc.connect(gain);
+      gain.connect(audio.masterGain || audio.ctx.destination);
+      osc.start(now);
+      osc.stop(now + (duration || 0.1) + 0.03);
+    }
+
+    window.addEventListener("pointerdown", initAudio, { once: true });
+
+    function formatTime(ms) {
+      const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      return `${minutes}:${String(seconds).padStart(2, "0")}`;
+    }
+
+    async function getLeaderboard() {
+      if (GLOBAL_LEADERBOARD_ENABLED && globalDb) {
+        const snapshot = await globalDb
+          .collection("leaderboard")
+          .orderBy("time", "asc")
+          .limit(20)
+          .get();
+
+        return snapshot.docs.map(doc => doc.data());
+      }
+
+      try {
+        return JSON.parse(localStorage.getItem(LEADERBOARD_KEY) || "[]");
+      } catch {
+        return [];
+      }
+    }
+
+    function saveLeaderboard(entries) {
+      localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(entries.slice(0, 20)));
+    }
+
+    async function saveScoreOnlineOrLocal(username, time) {
+      if (GLOBAL_LEADERBOARD_ENABLED && globalDb) {
+        await globalDb.collection("leaderboard").add({
+          username,
+          usernameLower: username.toLowerCase(),
+          time,
+          date: Date.now()
+        });
+        return;
+      }
+
+      const entries = await getLeaderboard();
+      entries.push({ username, usernameLower: username.toLowerCase(), time, date: Date.now() });
+      entries.sort((a, b) => a.time - b.time);
+      saveLeaderboard(entries);
+    }
+
+    async function renderLeaderboard() {
+      const entries = (await getLeaderboard()).sort((a, b) => a.time - b.time);
+      leaderboardList.innerHTML = "";
+
+      if (entries.length === 0) {
+        const empty = document.createElement("li");
+        empty.textContent = "No completions yet. Be the first Rudi legend.";
+        leaderboardList.appendChild(empty);
+        return;
+      }
+
+      for (const entry of entries) {
+        const item = document.createElement("li");
+        item.textContent = `${entry.username} — ${formatTime(entry.time)}`;
+        leaderboardList.appendChild(item);
+      }
+    }
+
+    function openLeaderboard() {
+      renderLeaderboard();
+      leaderboardPanel.style.display = "flex";
+    }
+
+    function askForLeaderboardName(timeMs) {
+      finalCompletionTime = timeMs;
+      finalTimeText.textContent = `Your time: ${formatTime(timeMs)}`;
+      usernameInput.value = "";
+      nameEntryError.textContent = "";
+      nameEntryPanel.style.display = "flex";
+      setTimeout(() => usernameInput.focus(), 50);
+    }
+
+    function normalizeUsername(text) {
+      return String(text)
+        .toLowerCase()
+        .replace(/@/g, "a")
+        .replace(/0/g, "o")
+        .replace(/[1!|]/g, "i")
+        .replace(/3/g, "e")
+        .replace(/[5$]/g, "s")
+        .replace(/7/g, "t")
+        .replace(/ck/g, "k")
+        .replace(/ph/g, "f")
+        .replace(/[^a-z]/g, "")
+        .replace(/(.)\1+/g, "$1");
+    }
+
+    const bannedUsernamePatterns = [
+      "fuck", "fuk", "fock", "shit", "bitch", "asshole",
+      "dick", "cock", "cunt", "bastard", "whore",
+      "slut", "porn", "sex", "boob", "penis",
+      "vagina", "dih", "dihh", "retard"
+    ];
+
+    function isBadUsername(username) {
+      const cleaned = normalizeUsername(username);
+      return bannedUsernamePatterns.some(word =>
+        cleaned.includes(normalizeUsername(word))
+      );
+    }
+
+    async function saveFinalScore() {
+      const username = usernameInput.value.trim();
+      const entries = await getLeaderboard();
+
+      if (!username) {
+        nameEntryError.textContent = "Type a username first.";
+        return;
+      }
+
+      if (isBadUsername(username)) {
+        nameEntryError.textContent = "That username is not allowed.";
+        return;
+      }
+
+      if (entries.some(entry => entry.username.toLowerCase() === username.toLowerCase())) {
+        nameEntryError.textContent = "That username is already taken on this leaderboard.";
+        return;
+      }
+
+      await saveScoreOnlineOrLocal(username, finalCompletionTime || 0);
+      nameEntryPanel.style.display = "none";
+      openLeaderboard();
+    }
+
+    creditsButton.addEventListener("pointerdown", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      creditsPanel.style.display = "flex";
+    });
+
+    closeCreditsButton.addEventListener("pointerdown", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      creditsPanel.style.display = "none";
+    });
+
+    leaderboardButton.addEventListener("pointerdown", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      openLeaderboard();
+    });
+
+    closeLeaderboardButton.addEventListener("pointerdown", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      leaderboardPanel.style.display = "none";
+    });
+
+    saveScoreButton.addEventListener("pointerdown", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      saveFinalScore();
+    });
+
+    closeNameEntryButton.addEventListener("pointerdown", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      nameEntryPanel.style.display = "none";
+    });
+
+    easyModeButton.addEventListener("pointerdown", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      setMode("easy");
+    });
+
+    mediumModeButton.addEventListener("pointerdown", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      setMode("medium");
+    });
+
+    hardModeButton.addEventListener("pointerdown", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      setMode("hard");
+    });
+
+    document.getElementById("playButton").addEventListener("pointerdown", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      initAudio();
+      titleScreen.classList.add("hidden");
+      gameStarted = true;
+      gameStartTime = performance.now();
+      spawnLevel(currentLevel);
+      applyLevelMusic(currentLevel);
+      beep(330, 0.08, "triangle", 0.05);
+      spawnHunterDog();
+    });
+
+    window.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
+    window.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
+
+    zoomToggleButton.addEventListener("pointerdown", e => {
+      e.preventDefault();
+      initAudio();
+      zoomLocked = !zoomLocked;
+      zoomToggleButton.style.transform = zoomLocked ? "scale(1.08)" : "scale(1)";
+      zoomToggleButton.style.background = zoomLocked ? "#ffe066" : "rgba(255,255,255,.84)";
+      beep(zoomLocked ? 140 : 90, 0.08, "triangle", 0.05);
+    });
+
+    zoomButton.addEventListener("pointerdown", e => {
+      e.preventDefault();
+      initAudio();
+      if (!isJumping) {
+        isJumping = true;
+        jumpVelocity = 13.5;
+        beep(520, 0.08, "triangle", 0.06);
+      }
+    });
+
+    const joy = { x: 0, y: 0, active: false, id: null };
+    const camTouch = { active: false, id: null, lastX: 0, lastY: 0 };
+
+    function updateJoystick(e) {
+      const rect = joystickBase.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      let dx = e.clientX - cx;
+      let dy = e.clientY - cy;
+      const dist = Math.hypot(dx, dy);
+      const max = 42;
+      if (dist > max) {
+        dx = dx / dist * max;
+        dy = dy / dist * max;
+      }
+      joy.x = dx / max;
+      joy.y = dy / max;
+      joystickKnob.style.left = `${36 + dx}px`;
+      joystickKnob.style.top = `${36 + dy}px`;
+    }
+
+    joystickBase.addEventListener("pointerdown", e => {
+      e.preventDefault();
+      joy.active = true;
+      joy.id = e.pointerId;
+      joystickBase.setPointerCapture(e.pointerId);
+      updateJoystick(e);
+    });
+    joystickBase.addEventListener("pointermove", e => {
+      if (joy.active && e.pointerId === joy.id) updateJoystick(e);
+    });
+    function resetJoy() {
+      joy.active = false;
+      joy.x = 0;
+      joy.y = 0;
+      joystickKnob.style.left = "36px";
+      joystickKnob.style.top = "36px";
+    }
+    joystickBase.addEventListener("pointerup", resetJoy);
+    joystickBase.addEventListener("pointercancel", resetJoy);
+
+    cameraZone.addEventListener("pointerdown", e => {
+      if (!gameStarted || meteorEnding || flyAwayEnding || !titleScreen.classList.contains("hidden")) return;
+      e.preventDefault();
+      camTouch.active = true;
+      camTouch.id = e.pointerId;
+      camTouch.lastX = e.clientX;
+      camTouch.lastY = e.clientY;
+      cameraZone.setPointerCapture(e.pointerId);
+    });
+    cameraZone.addEventListener("pointermove", e => {
+      if (!camTouch.active || e.pointerId !== camTouch.id) return;
+      e.preventDefault();
+      const dx = e.clientX - camTouch.lastX;
+      const dy = e.clientY - camTouch.lastY;
+      camTouch.lastX = e.clientX;
+      camTouch.lastY = e.clientY;
+      cameraYaw -= dx * 0.008;
+      cameraPitch += dy * 0.006;
+      cameraPitch = THREE.MathUtils.clamp(cameraPitch, -1.2, 1.05);
+    });
+    cameraZone.addEventListener("pointerup", () => { camTouch.active = false; camTouch.id = null; });
+    cameraZone.addEventListener("pointercancel", () => { camTouch.active = false; camTouch.id = null; });
+
+    function collectTreat(t, collectedByClone = false) {
+      score++;
+      scoreEl.textContent = score;
+      beep(collectedByClone ? 190 : 340, collectedByClone ? 0.12 : 0.08, collectedByClone ? "sine" : "triangle", collectedByClone ? 0.04 : 0.05);
+      t.position.copy(randomPos(620));
+      t.position.y = 1.05;
+      if (score >= 10 && !rudySpinMode && !spinDisabled) {
+        rudySpinMode = true;
+        hint.textContent = "RUDI SPIN MODE ACTIVATED";
+      }
+      if (score >= 20 && !rudyDanceMode) {
+        rudyDanceMode = true;
+        hint.textContent = "RUDI DANCE MODE ACTIVATED";
+      }
+      const levelGoal = Math.min(75, 15 + currentLevel * 5);
+      if (score >= levelGoal && currentLevel < MAX_LEVELS) {
+        currentLevel++;
+        score = 0;
+        scoreEl.textContent = score;
+        spawnLevel(currentLevel);
+        moveEndingStar();
+        if (currentLevel >= 4) speedMultiplier += 0.25;
+        if (currentLevel >= 10) createClone();
+        spawnHunterDog();
+      }
+      if (currentLevel >= MAX_LEVELS && score >= 30 && !flyAwayEnding && !meteorEnding && !finalBossStarActive && !finalBossEnding) {
+        if (gameMode === "hard") {
+          spawnFinalBossStar();
+          triggerFinalBossEnding();
+        } else {
+          triggerFlyAwayEnding();
+        }
+      }
+    }
+
+    function updateCounters() {
+      zoomStacksDisplay.textContent = speedStacks;
+      cloneCountDisplay.textContent = clones.length;
+    }
+
+    function easeOutBack(t) {
+      const c1 = 1.70158;
+      const c3 = c1 + 1;
+      return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+    }
+
+    function easeInOut(t) {
+      return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    }
+
+    function getFormScale(form) {
+      if (form === "big") return new THREE.Vector3(2.35, 2.7, 2.35);
+      if (form === "small") return new THREE.Vector3(0.48, 0.62, 0.48);
+      if (form === "speed") return new THREE.Vector3(1.22, 1.18, 1.55);
+      if (form === "clone") return new THREE.Vector3(0.9, 1.7, 0.9);
+      return new THREE.Vector3(1.08, 1.38, 1.08);
+    }
+
+    function animateRudiPower(nextForm) {
+      const fromForm = currentPowerForm;
+      const baseFrom = rudi.scale.clone();
+      const baseTo = getFormScale(nextForm);
+      let midScale = null;
+      let duration = 0.45;
+      let style = "normal";
+
+      if (nextForm === "big") {
+        midScale = baseTo.clone().multiply(new THREE.Vector3(1.12, 0.86, 1.12));
+        duration = 0.55;
+        style = "growSquash";
+      }
+
+      if (nextForm === "small") {
+        duration = fromForm === "big" ? 0.72 : 0.5;
+        style = "shrink";
+      }
+
+      if (nextForm === "speed") {
+        midScale = new THREE.Vector3(0.92, 1.55, 1.85);
+        duration = 0.42;
+        style = "stretchZoom";
+      }
+
+      if (nextForm === "clone") {
+        midScale = baseFrom.clone().multiply(new THREE.Vector3(0.72, 1.45, 1.2));
+        duration = 0.5;
+        style = "clonePop";
+      }
+
+      if (nextForm === "normal") {
+        duration = 0.5;
+        style = "settle";
+      }
+
+      powerAnim = {
+        time: 0,
+        duration,
+        from: baseFrom,
+        mid: midScale,
+        to: baseTo,
+        style
+      };
+
+      currentPowerForm = nextForm;
+    }
+
+    function updatePowerAnimation(dt) {
+      if (!powerAnim) return;
+
+      powerAnim.time += dt;
+      const t = Math.min(1, powerAnim.time / powerAnim.duration);
+
+      let target;
+
+      if (powerAnim.mid) {
+        if (t < 0.5) {
+          target = powerAnim.from.clone().lerp(powerAnim.mid, easeOutBack(t * 2));
+        } else {
+          target = powerAnim.mid.clone().lerp(powerAnim.to, easeOutBack((t - 0.5) * 2));
+        }
+      } else {
+        target = powerAnim.from.clone().lerp(powerAnim.to, easeInOut(t));
+      }
+
+      if (powerAnim.style === "shrink") {
+        rudi.rotation.z += Math.sin(t * Math.PI) * 0.025;
+      }
+
+      if (powerAnim.style === "clonePop") {
+        rudi.position.y += Math.sin(t * Math.PI) * 0.35;
+      }
+
+      rudi.scale.copy(target);
+
+      if (t >= 1) {
+        rudi.scale.copy(powerAnim.to);
+        powerAnim = null;
+      }
+    }
+
+    function createClone() {
+      const clone = makeRudi();
+      clone.position.copy(rudi.position);
+      clone.position.x += 6;
+      scene.add(clone);
+      clones.push(clone);
+      updateCounters();
+      return clone;
+    }
+
+    function applyPowerUp(type) {
+      if (type === "speed") {
+        animateRudiPower("speed");
+        speedStacks++;
+        speedMultiplier = 1 + speedStacks * 1.5;
+        zoomResetArmed = false;
+        zoomStacksButton.style.background = "rgba(255,255,255,.82)";
+        hint.textContent = `ZOOM STACKS: ${speedStacks}`;
+        updateCounters();
+        if (speedStacks >= 10 && clones.length > 0 && !cloneFlyAwayTriggered) {
+          cloneFlyAwayTriggered = true;
+          const flyingClone = clones[0];
+          flyingClone.userData.flyAway = true;
+          flyingClone.userData.flyVelocity = new THREE.Vector3(18, 12, -24);
+          hint.textContent = "THE CLONE ACHIEVED MAXIMUM ZOOMIES";
+        }
+      }
+      if (type === "big") {
+        sizeMultiplier = 2.2;
+        animateRudiPower("big");
+        setTimeout(() => {
+          sizeMultiplier = 1;
+          animateRudiPower("normal");
+        }, 12000);
+      }
+      if (type === "small") {
+        sizeMultiplier = 0.45;
+        animateRudiPower("small");
+        setTimeout(() => {
+          sizeMultiplier = 1;
+          animateRudiPower("normal");
+        }, 12000);
+      }
+      if (type === "clone3") {
+        animateRudiPower("clone");
+        createClone();
+        createClone();
+        createClone();
+        setTimeout(() => animateRudiPower("normal"), 520);
+      }
+      if (type === "clone1") {
+        animateRudiPower("clone");
+        createClone();
+        setTimeout(() => animateRudiPower("normal"), 520);
+      }
+    }
+
+    function addDebris(position, material, count, force) {
+      for (let i = 0; i < count; i++) {
+        const debris = new THREE.Mesh(
+          new THREE.BoxGeometry(Math.random() * 3 + 1, Math.random() * 3 + 1, Math.random() * 3 + 1),
+          material ? material.clone() : mat([0x999999, 0x777777, 0xbbbbbb][Math.floor(Math.random() * 3)])
+        );
+        debris.position.copy(position);
+        const angle = Math.random() * Math.PI * 2;
+        const launchForce = Math.random() * force + 5;
+        debris.userData.vel = new THREE.Vector3(
+          Math.cos(angle) * launchForce,
+          Math.random() * 11 + 4,
+          Math.sin(angle) * launchForce
+        );
+        debris.userData.spin = new THREE.Vector3(
+          Math.random() * 0.25,
+          Math.random() * 0.25,
+          Math.random() * 0.25
+        );
+        debris.castShadow = true;
+        debris.receiveShadow = true;
+        scene.add(debris);
+        debrisObjects.push(debris);
+      }
+    }
+
+    function explodeRoom() {
+      explosionFlash = 1;
+      explosionOverlay.style.opacity = "1";
+
+      const breakables = [];
+      scene.traverse(obj => {
+        if (obj && obj.isMesh && obj.visible && obj !== meteorCore && obj.parent !== rudi) {
+          breakables.push(obj);
+        }
+      });
+
+      for (const obj of breakables) {
+        addDebris(obj.getWorldPosition(new THREE.Vector3()), obj.material, 1, 14);
+        obj.visible = false;
+      }
+
+      for (let i = 0; i < 90; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const radius = Math.random() * 55;
+        addDebris(
+          new THREE.Vector3(Math.cos(angle) * radius, Math.random() * 18 + 2, Math.sin(angle) * radius),
+          null,
+          1,
+          12
+        );
+      }
+
+      beep(18, 2.8, "sawtooth", 0.24);
+    }
+
+    function triggerFlyAwayEnding() {
+      flyAwayEnding = true;
+      flyAwayTimer = 0;
+      velocity.set(0, 0, 0);
+      hud.style.display = "none";
+      hint.style.display = "none";
+      joystickBase.style.display = "none";
+      zoomButton.style.display = "none";
+      camera.position.set(rudi.position.x + 14, 7, rudi.position.z + 14);
+      camera.lookAt(rudi.position.x, rudi.position.y + 1.5, rudi.position.z);
+      beep(440, 0.2, "triangle", 0.08);
+    }
+
+    function updateFlyAwayEnding(dt) {
+      flyAwayTimer += dt;
+      velocity.set(0, 0, 0);
+
+      if (flyAwayTimer < 1.2) {
+        camera.position.lerp(new THREE.Vector3(rudi.position.x + 12, 6.2, rudi.position.z + 12), 0.08);
+        camera.lookAt(rudi.position.x, rudi.position.y + 1.5, rudi.position.z);
+      } else if (flyAwayTimer < 2.2) {
+        rudi.rotation.y += (Math.atan2(camera.position.x - rudi.position.x, camera.position.z - rudi.position.z) - rudi.rotation.y) * 0.08;
+        camera.lookAt(rudi.position.x, rudi.position.y + 1.5, rudi.position.z);
+      } else {
+        rudi.position.y += dt * 18;
+        rudi.position.x += dt * 24;
+        rudi.position.z -= dt * 30;
+        rudi.rotation.x = 0;
+        rudi.rotation.z = 0;
+        camera.lookAt(rudi.position.x, rudi.position.y, rudi.position.z);
+      }
+
+      if (flyAwayTimer > 4.7) showEnding("🐶 Oh no! Rudi got bored!", currentLevel >= MAX_LEVELS);
+    }
+
+    function triggerMeteorEnding() {
+      meteorEnding = true;
+      meteorTimer = 0;
+      meteorExploded = false;
+      velocity.set(0, 0, 0);
+      hud.style.display = "none";
+      hint.style.display = "none";
+      joystickBase.style.display = "none";
+      zoomButton.style.display = "none";
+      scene.fog = null;
+      meteor.visible = true;
+      meteor.position.set(0, 260, 0);
+      meteor.scale.setScalar(2.8);
+      meteorLight.intensity = 8;
+      meteorLight.position.copy(meteor.position);
+      camera.position.set(0, 70, 280);
+      camera.lookAt(0, 160, 0);
+      beep(80, 1.4, "sawtooth", 0.12);
+    }
+
+    function updateMeteorEnding(dt) {
+      meteorTimer += dt;
+      velocity.set(0, 0, 0);
+
+      if (!meteorExploded) {
+        const meteorY = Math.max(65, 260 - meteorTimer * 32);
+        meteor.position.set(0, meteorY, 0);
+        meteor.rotation.x += dt * 0.8;
+        meteor.rotation.y += dt * 1.1;
+        meteorTexture.offset.x += dt * 0.075;
+        meteorTexture.offset.y += dt * 0.045;
+        meteorCore.scale.set(
+          1 + Math.sin(performance.now() * 0.004) * 0.045,
+          1 + Math.sin(performance.now() * 0.005 + 2) * 0.035,
+          1 + Math.sin(performance.now() * 0.0045 + 4) * 0.045
+        );
+        meteorLight.position.copy(meteor.position);
+        camera.position.set(0, 70, 280);
+        camera.lookAt(0, meteor.position.y - 15, 0);
+
+        if (meteor.position.y <= 65) {
+          meteorExploded = true;
+          meteor.visible = false;
+          meteorLight.intensity = 0;
+          scene.background = new THREE.Color(0x9fd8ff);
+          document.body.style.background = "#9fd8ff";
+          explodeRoom();
+        }
+        return;
+      }
+
+      if (explosionFlash > 0) {
+        explosionFlash -= dt * 0.7;
+        explosionOverlay.style.opacity = Math.max(0, explosionFlash).toString();
+      }
+
+      if (meteorTimer > 6) advanceLevelAfterMeteor();
+    }
+
+    function advanceLevelAfterMeteor() {
+      if (currentLevel < MAX_LEVELS) {
+        currentLevel++;
+        score = 0;
+        scoreEl.textContent = score;
+        meteorEnding = false;
+        meteorTimer = 0;
+        meteorExploded = false;
+        explosionFlash = 0;
+        explosionOverlay.style.opacity = "0";
+
+        for (const debris of debrisObjects) scene.remove(debris);
+        debrisObjects.length = 0;
+
+        rudi.visible = true;
+        rudiPos.set(0, 0, 0);
+        rudi.position.copy(rudiPos);
+        rudi.rotation.set(0, 0, 0);
+        rudi.scale.set(1.08, 1.38, 1.08);
+        powerAnim = null;
+        currentPowerForm = "normal";
+        velocity.set(0, 0, 0);
+
+        meteor.visible = false;
+        meteorLight.intensity = 0;
+        spawnLevel(currentLevel);
+        spawnHunterDog();
+
+        if (!endingStar.parent) scene.add(endingStar);
+        moveEndingStar();
+        endingStar.visible = true;
+
+        hud.style.display = "block";
+        hint.style.display = "block";
+        joystickBase.style.display = "block";
+        zoomButton.style.display = "block";
+        cameraYaw = 0;
+        cameraPitch = 0.35;
+        camera.position.set(0, 14, 19);
+        camera.lookAt(0, 1.6, 0);
+      } else {
+        showEnding("🐶 Good job, you won!", true);
+      }
+    }
+
+    function showEnding(message, completedGame = false) {
+      endingMessage.textContent = message;
+      endText.style.display = "flex";
+      gameStarted = true;
+
+      if (completedGame) {
+        const completedTime = performance.now() - gameStartTime;
+        askForLeaderboardName(completedTime);
+      }
+    }
+
+    function updateTitle(dt) {
+      titleDog.rotation.y += dt * 1.8;
+      titleDog.position.y = -2.2 + Math.sin(performance.now() * 0.003) * 0.12;
+      titleRenderer.render(titleScene, titleCamera);
+      renderer.render(scene, camera);
+    }
+
+    function updateGameplay(dt) {
+      let mx = 0;
+      let mz = 0;
+
+      if (keys.w || keys.arrowup) mz += 1;
+      if (keys.s || keys.arrowdown) mz -= 1;
+      if (keys.a || keys.arrowleft) mx -= 1;
+      if (keys.d || keys.arrowright) mx += 1;
+
+      mx += joy.x;
+      mz += -joy.y;
+
+      const forwardX = Math.sin(cameraYaw);
+      const forwardZ = Math.cos(cameraYaw);
+      const rightX = -Math.cos(cameraYaw);
+      const rightZ = Math.sin(cameraYaw);
+      const worldMX = rightX * mx + forwardX * mz;
+      const worldMZ = rightZ * mx + forwardZ * mz;
+      const inputLen = Math.hypot(worldMX, worldMZ);
+      const zooming = zoomLocked && boost > 0;
+
+      if (audio.ready && audio.musicGain) {
+        audio.musicGain.gain.setTargetAtTime(zooming ? 0.035 : 0.022, audio.ctx.currentTime, 0.08);
+      }
+
+      const topSpeed = (zooming ? 24 : 9) * speedMultiplier;
+
+      if (inputLen > 0.05) {
+        const moveX = worldMX / inputLen;
+        const moveZ = worldMZ / inputLen;
+        velocity.x += moveX * topSpeed * dt * 6;
+        velocity.z += moveZ * topSpeed * dt * 6;
+        if (!rudySpinMode) rudi.rotation.y = Math.atan2(moveX, moveZ) - Math.PI / 2;
+      }
+
+      velocity.multiplyScalar(0.88);
+      if (velocity.length() > topSpeed) velocity.setLength(topSpeed);
+      rudiPos.addScaledVector(velocity, dt);
+      rudiPos.x = THREE.MathUtils.clamp(rudiPos.x, -720, 720);
+      rudiPos.z = THREE.MathUtils.clamp(rudiPos.z, -720, 720);
+
+      rudi.position.copy(rudiPos);
+      if (!powerAnim) {
+        if (currentPowerForm === "normal") {
+          rudi.scale.set(1.08 * sizeMultiplier, 1.38 * sizeMultiplier, 1.08 * sizeMultiplier);
+        }
+      }
+      updatePowerAnimation(dt);
+
+      const moving = velocity.length() > 0.35;
+      const animTime = performance.now() * 0.012;
+      const zoomBonus = zooming ? 1.7 : 1;
+      rudi.position.y = moving ? Math.abs(Math.sin(animTime * zoomBonus)) * 0.22 : Math.sin(animTime * 0.35) * 0.035;
+
+      if (isJumping || jumpHeight > 0) {
+        jumpVelocity -= 32 * dt;
+        jumpHeight += jumpVelocity * dt;
+        if (jumpHeight <= 0) {
+          jumpHeight = 0;
+          jumpVelocity = 0;
+          isJumping = false;
+        }
+        rudi.position.y += jumpHeight;
+      }
+
+      for (let i = 0; i < rudiParts.legs.length; i++) {
+        rudiParts.legs[i].rotation.z = moving ? Math.sin(animTime * 1.8 * zoomBonus + (i % 2 === 0 ? 0 : Math.PI)) * 0.45 : 0;
+      }
+
+      if (rudiParts.tail) rudiParts.tail.rotation.y = Math.sin(animTime * 2.7 * zoomBonus) * 0.75;
+
+      for (let i = 0; i < rudiParts.ears.length; i++) {
+        rudiParts.ears[i].rotation.x = (i === 0 ? 0.15 : -0.15) + (moving ? Math.sin(animTime * 1.5 + i) * 0.18 : 0);
+      }
+
+      if (rudiParts.head) rudiParts.head.rotation.z = moving ? Math.sin(animTime * 0.9) * 0.08 : 0;
+      if (rudySpinMode && !spinDisabled) rudi.rotation.z += dt * 5;
+      if (rudyDanceMode && rudiParts.head) rudiParts.head.rotation.z = Math.sin(performance.now() * 0.014) * 0.25;
+
+      const isActuallyMoving = inputLen > 0.05 && velocity.length() > 0.35;
+
+      if (zoomLocked && boost <= 0) {
+        zoomLocked = false;
+        boost = 0;
+        if (typeof zoomToggleButton !== "undefined" && zoomToggleButton) {
+          zoomToggleButton.style.transform = "scale(1)";
+          zoomToggleButton.style.background = "rgba(255,255,255,.84)";
+        }
+        hint.textContent = "Zoomies ran out! Stand still or walk normal to recharge.";
+      }
+
+      if (zoomLocked && isActuallyMoving && boost > 0) {
+        boost = Math.max(0, boost - dt * 22);
+      } else {
+        boost = Math.min(100, boost + dt * 18);
+      }
+
+      boostEl.textContent = Math.round(boost);
+
+      if (finalBossStarActive && finalBossStar) {
+        finalBossStar.rotation.x += dt * 4;
+        finalBossStar.rotation.y += dt * 5;
+        const pulse = (Math.sin(performance.now() * 0.018) + 1) / 2;
+        finalBossStar.material.color.setRGB(1, 0, pulse);
+        finalBossStar.material.emissive.setRGB(0, pulse, 1);
+        if (finalBossStar.position.distanceTo(rudiPos) < 8) triggerFinalBossEnding();
+      }
+
+      if (!endingStar.parent) scene.add(endingStar);
+      endingStar.visible = true;
+      endingStar.rotation.y += dt * 2;
+      endingStar.rotation.x += dt * 1.5;
+      endingStar.position.y = 8.5 + Math.sin(performance.now() * 0.003) * 1.2;
+      if (typeof endingStarLight !== "undefined") {
+        endingStarLight.position.copy(endingStar.position);
+      }
+      if (endingStar.parent && endingStar.position.distanceTo(rudiPos) < 10) {
+        endingStar.visible = false;
+        triggerMeteorEnding();
+      }
+
+      for (const treat of treats) {
+        treat.rotation.z += dt * 2.5;
+        treat.rotation.y += dt * 1.2;
+        if (treat.position.distanceTo(rudiPos) < 3.1) collectTreat(treat, false);
+      }
+
+      for (let i = powerUps.length - 1; i >= 0; i--) {
+        const power = powerUps[i];
+        power.rotation.y += dt * 2.5;
+        power.rotation.x += dt * 1.6;
+
+        if (power.userData.type === "clone3") power.material.color.setHSL((performance.now() * 0.00025) % 1, 1, 0.6);
+        if (power.userData.type === "clone1") {
+          const pulse = (Math.sin(performance.now() * 0.018) + 1) / 2;
+          power.material.color.setRGB(0, 0.55 + pulse * 0.45, 1);
+        }
+
+        if (power.position.distanceTo(rudiPos) < 5) {
+          applyPowerUp(power.userData.type);
+          scene.remove(power);
+          powerUps.splice(i, 1);
+          powerCountEl.textContent = powerUps.length;
+        }
+      }
+
+      updateClones(dt);
+
+      const camDistance = 20;
+      const safePitch = Math.max(cameraPitch, -1.05);
+      const horizontalDistance = Math.cos(safePitch) * camDistance;
+      const verticalOffset = Math.sin(safePitch) * camDistance + 10;
+      const camX = rudiPos.x - Math.sin(cameraYaw) * horizontalDistance;
+      const camZ = rudiPos.z - Math.cos(cameraYaw) * horizontalDistance;
+      const camY = Math.max(2.5, verticalOffset);
+      camera.position.lerp(new THREE.Vector3(camX, camY, camZ), 0.11);
+      camera.lookAt(rudiPos.x, 1.6, rudiPos.z);
+    }
+
+    function updateClones(dt) {
+      for (let i = 0; i < clones.length; i++) {
+        const clone = clones[i];
+
+        if (clone.userData.flyAway) {
+          clone.position.addScaledVector(clone.userData.flyVelocity, dt);
+          clone.userData.flyVelocity.y += dt * 8;
+          continue;
+        }
+
+        const angle = ((Math.PI * 2) / Math.max(1, clones.length)) * i + performance.now() * 0.00015;
+        const radius = 8 + clones.length * 1.8;
+        const orbitTarget = new THREE.Vector3(
+          rudi.position.x + Math.sin(angle) * radius,
+          rudi.position.y,
+          rudi.position.z + Math.cos(angle) * radius
+        );
+
+        clone.position.lerp(orbitTarget, 0.06);
+        clone.lookAt(rudi.position.x, clone.position.y, rudi.position.z);
+
+        for (const treat of treats) {
+          if (treat.position.distanceTo(clone.position) < 3.1) collectTreat(treat, true);
+        }
+
+        for (let p = powerUps.length - 1; p >= 0; p--) {
+          const power = powerUps[p];
+          if (power.position.distanceTo(clone.position) < 5) {
+            applyPowerUp(power.userData.type);
+            scene.remove(power);
+            powerUps.splice(p, 1);
+            powerCountEl.textContent = powerUps.length;
+          }
+        }
+      }
+    }
+
+    function updateDebris() {
+      for (const debris of debrisObjects) {
+        debris.position.add(debris.userData.vel);
+        debris.userData.vel.y -= 0.08;
+        debris.rotation.x += debris.userData.spin.x;
+        debris.rotation.y += debris.userData.spin.y;
+        debris.rotation.z += debris.userData.spin.z;
+      }
+    }
+
+    function resetGameToMenu() {
+      flyAwayEnding = false;
+      flyAwayTimer = 0;
+      meteorEnding = false;
+      meteorTimer = 0;
+      meteorExploded = false;
+      explosionFlash = 0;
+      rudySpinMode = false;
+      rudyDanceMode = false;
+      cloneFlyAwayTriggered = false;
+      score = 0;
+      boost = 100;
+      speedStacks = 0;
+      speedMultiplier = 1;
+      sizeMultiplier = 1;
+      zoomLocked = false;
+      jumpVelocity = 0;
+      jumpHeight = 0;
+      isJumping = false;
+      zoomResetArmed = false;
+      cloneClearArmed = false;
+      scoreEl.textContent = "0";
+      boostEl.textContent = "100";
+      zoomStacksButton.style.background = "rgba(255,255,255,.82)";
+      cloneCountButton.style.background = "rgba(255,255,255,.82)";
+      updateCounters();
+
+      endText.style.display = "none";
+      titleScreen.classList.remove("hidden");
+      hud.style.display = "block";
+      hint.style.display = "block";
+      joystickBase.style.display = "block";
+      zoomButton.style.display = "block";
+      zoomButton.style.transform = "scale(1)";
+      zoomButton.style.background = "rgba(255,255,255,.84)";
+      zoomToggleButton.style.transform = "scale(1)";
+      zoomToggleButton.style.background = "rgba(255,255,255,.84)";
+      explosionOverlay.style.opacity = "0";
+      stopMusic();
+
+      for (const debris of debrisObjects) scene.remove(debris);
+      debrisObjects.length = 0;
+      while (clones.length) scene.remove(clones.pop());
+      updateCounters();
+
+      rudi.visible = true;
+      rudiPos.set(0, 0, 0);
+      rudi.position.copy(rudiPos);
+      rudi.rotation.set(0, 0, 0);
+      rudi.scale.set(1.08, 1.38, 1.08);
+      powerAnim = null;
+      currentPowerForm = "normal";
+      velocity.set(0, 0, 0);
+
+      meteor.visible = false;
+      meteorLight.intensity = 0;
+      resetHunter();
+      if (finalBossStar) {
+        scene.remove(finalBossStar);
+        finalBossStar = null;
+      }
+      finalBossStarActive = false;
+      finalBossEnding = false;
+      if (!endingStar.parent) scene.add(endingStar);
+      moveEndingStar();
+
+      cameraYaw = 0;
+      cameraPitch = 0.35;
+      camera.position.set(0, 14, 19);
+      camera.lookAt(0, 1.6, 0);
+      gameStarted = false;
+    }
+
+    document.getElementById("goBackButton").addEventListener("pointerdown", e => {
+      e.preventDefault();
+      resetGameToMenu();
+    });
+
+    zoomStacksButton.addEventListener("pointerdown", e => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (!zoomResetArmed) {
+        zoomResetArmed = true;
+        zoomStacksButton.style.background = "#ffb3b3";
+        hint.textContent = "Tap Zoom stacks again to reset all speed stacks";
+        return;
+      }
+
+      speedStacks = 0;
+      speedMultiplier = 1;
+      zoomResetArmed = false;
+      zoomStacksButton.style.background = "rgba(255,255,255,.82)";
+      updateCounters();
+      hint.textContent = "Zoom stacks reset. Rudi is normal speed again.";
+    });
+
+    cloneCountButton.addEventListener("pointerdown", e => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (!cloneClearArmed) {
+        cloneClearArmed = true;
+        cloneCountButton.style.background = "#ffb3b3";
+        hint.textContent = "Tap Clones again to remove all clones";
+        return;
+      }
+
+      while (clones.length) scene.remove(clones.pop());
+      cloneClearArmed = false;
+      cloneCountButton.style.background = "rgba(255,255,255,.82)";
+      updateCounters();
+      hint.textContent = "All clones removed.";
+    });
+
+    spinToggleButton.addEventListener("pointerdown", e => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      spinDisabled = !spinDisabled;
+      rudySpinMode = !spinDisabled && score >= 10;
+      rudi.rotation.z = 0;
+      spinToggleButton.style.background = spinDisabled ? "#ffb3b3" : "rgba(255,255,255,.82)";
+      spinToggleButton.textContent = spinDisabled ? "Spin Off" : "Stop Spin";
+      hint.textContent = spinDisabled ? "Rudi spin disabled." : "Rudi spin enabled.";
+    });
+
+    spawnLevel(currentLevel);
+    setMode("easy");
+    updateCounters();
+    stopMusic();
+
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const dt = Math.min(clock.getDelta(), 0.033);
+
+      if (!gameStarted) {
+        updateTitle(dt);
+        return;
+      }
+
+      if (finalBossEnding) updateFinalBossEnding(dt);
+      else if (flyAwayEnding) updateFlyAwayEnding(dt);
+      else if (meteorEnding) updateMeteorEnding(dt);
+      else updateGameplay(dt);
+
+      updateHunter(dt);
+      updateDebris();
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      titleRenderer.setSize(titleBox.clientWidth || 320, titleBox.clientHeight || 260);
+    });
+  </script>
+
+<!-- Simple Settings -->
+<button id="settingsGear" style="position:fixed;left:50%;top:18px;transform:translateX(-50%);z-index:120;border:0;border-radius:50%;width:52px;height:52px;font-size:28px;background:white;box-shadow:0 8px 20px rgba(0,0,0,.25);">⚙️</button>
+
+<div id="settingsPopup" style="display:none;position:fixed;inset:0;z-index:121;background:rgba(0,0,0,.45);align-items:center;justify-content:center;">
+  <div style="width:min(500px,90vw);background:white;color:#333;padding:20px;border-radius:24px;">
+    <h2>Settings</h2>
+    <p><label><input type="checkbox" id="spinSetting" checked> Rudi spins at 10 treats</label></p>
+    <p>Title Color: <input type="color" id="titleColor" value="#79d86b"></p>
+    <p>Meteor Color: <input type="color" id="meteorColor" value="#ff3300"></p>
+    <button id="closeSettings">Close</button>
+  </div>
+</div>
+
+<script>
+window.addEventListener("load",()=>{
+ const gear=document.getElementById("settingsGear");
+ const popup=document.getElementById("settingsPopup");
+ const close=document.getElementById("closeSettings");
+
+ gear.onclick=()=>popup.style.display="flex";
+ close.onclick=()=>popup.style.display="none";
+
+ document.getElementById("spinSetting").onchange=(e)=>{
+   if(typeof spinDisabled!=="undefined"){
+      spinDisabled=!e.target.checked;
+      if(spinDisabled && typeof rudySpinMode!=="undefined") rudySpinMode=false;
+   }
+ };
+
+ document.getElementById("titleColor").oninput=(e)=>{
+   const ts=document.getElementById("titleScreen");
+   if(ts) ts.style.background=`radial-gradient(circle at center, ${e.target.value} 0%, #79d86b 72%)`;
+ };
+
+ document.getElementById("meteorColor").oninput=(e)=>{
+   try{
+     if(typeof meteorCore !== "undefined" && meteorCore.material){
+       meteorCore.material.emissive.set(e.target.value);
+       meteorCore.material.color.set(e.target.value);
+       meteorCore.material.emissiveIntensity = 2.1;
+     }
+     if(typeof meteorCtx !== "undefined" && typeof meteorTexture !== "undefined"){
+       meteorCtx.globalCompositeOperation = "source-atop";
+       meteorCtx.fillStyle = e.target.value;
+       meteorCtx.globalAlpha = 0.55;
+       meteorCtx.fillRect(0, 0, 256, 256);
+       meteorCtx.globalAlpha = 1;
+       meteorCtx.globalCompositeOperation = "source-over";
+       meteorTexture.needsUpdate = true;
+     }
+   }catch(err){}
+ };
+});
+</script>
+
+</body>
+</html>
